@@ -1,0 +1,2 @@
+when graph is dense try to consider reverse graph.
+some sets. minimum bounds
