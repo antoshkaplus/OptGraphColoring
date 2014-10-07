@@ -27,6 +27,7 @@ using Edge          = pair<int, int>;
 using AdjacencyList = vector<vector<int>>;
 using Degree        = size_t;
 using Count         = size_t;
+using Index         = size_t;
 using Color         = int;
 const int COLOR_NONE = -1;
 
@@ -60,6 +61,20 @@ public:
     size_t get(const T& t) const {
         auto it = this->find(t);
         return it == this->end() ? 0 : it->second;
+    }
+    
+    const T& minCount() {
+        const T* key;
+        size_t count;
+        bool initialized = false;
+        for (auto& p : *this) {
+            if (!initialized || count > p.second) {
+                key = &p.first;
+                count = p.second;
+                initialized = true;
+            } 
+        }
+        return count;
     }
 };
 
@@ -106,12 +121,26 @@ struct Graph {
         edges.erase(edges.begin() + edgeCountNeeded, edges.end());
         return Graph(edges, nodeCount);       
     }
+    
+    vector<Edge> edges() const {
+        vector<Edge> es;
+        for (int i = 0; i < nodeCount; ++i) {
+            for (auto j : adjacencyList[i]) {
+                if (j > i) continue;
+                es.emplace_back(i, j);
+            }
+        }
+        return es;
+    }
         
 private:
     static AdjacencyList edgesToAdjacencyList(const vector<Edge>& edges, size_t nodeCount);
     
 
 };
+
+// if graph is dence it's much better to keep adjacent colors in array and not map
+// also it's much better to make colors as a sequence 
 
 // mutable class
 // here we expect that colors could be any number and not necessarily ordered
@@ -142,6 +171,7 @@ public:
         : Graph(adjList), 
           _coloring(coloring) {
         
+        _adjacentNodesOfColorCount.resize(nodeCount);
         for (Node i = 0; i < nodeCount; i++) {
             if (color(i) == COLOR_NONE) {
                 _uncoloredNodes.insert(i);
@@ -171,6 +201,15 @@ public:
     set<Color> adjacentColors(Node i) const {
         return _adjacentNodesOfColorCount[i].keys();
     }
+    
+    const map<Color, Count>& adjacentNodesOfColorCount(Node i) {
+        return _adjacentNodesOfColorCount[i];
+    }
+    
+    Count adjacentNodesWithSameColorCount(Node i) {
+        return adjacentNodesOfColorCount(i, color(i));
+    }
+    
     
     set<Color> colors() const {
         return _nodeCountOfColor.keys();
@@ -258,7 +297,6 @@ public:
             }
         }
     }
-    
 
     // sets another first possible color for a node
     void resetColor(Node i) {

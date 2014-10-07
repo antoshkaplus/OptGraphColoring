@@ -16,7 +16,8 @@
 
 #include "GC_BB_NodeLevel.h"
 #include "GC_TabuSearch.h"
-
+#include "GC_GA.h"
+#include "GC_Tabucol.h"
 
 bool isFeasibleColoring(const ColoredGraph& c_gr) {
     if (c_gr.uncoloredNodeCount() > 0) return false;
@@ -27,14 +28,15 @@ bool isFeasibleColoring(const ColoredGraph& c_gr) {
 }
 
 void compareMethods() {
+    GC_Tabucol tabucol;
     GC_Naive naive;
     GC_Naive_2 naive_2;
     GC_BB_NodeLevel bb_nodeLevel(GC_BB_NodeLevel::Duration(60));
     GC_TabuSearch tabuSearch;
     Count nodeCount = 1000;
-    for (auto c = 0.1; c <= 0.6; c+=0.1) {
+    for (auto c = 0.5; c <= 0.6; c+=0.1) {
         Graph gr = Graph::random(nodeCount, c);
-        for (GC* gc : vector<GC*>{&naive, &naive_2, /*&bb_nodeLevel,*/ &tabuSearch}) {
+        for (GC* gc : vector<GC*>{&tabucol, &naive, &naive_2, /*&bb_nodeLevel,*/ &tabuSearch}) {
             clock_t start = clock();
             int colorCount = gc->solve(gr).colorCount();
             clock_t finish = clock();

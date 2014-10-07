@@ -6,10 +6,10 @@ set(CMAKE_CXX_FLAGS "-std=c++11")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -Wall -g")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -Wall -O3")
 
-# will initialize in subdirectory
-set(SOURCE_FILES ${SOURCE_FILES})
+file(GLOB SOURCE_FILES "src/*.cpp")
+file(GLOB HEADER_FILES "src/*.h")
 
-add_subdirectory("${CMAKE_SOURCE_DIR}/src")
+set(SOURCE_FILES ${SOURCE_FILES} ${HEADER_FILES})
 
 add_executable(GraphColoring ${SOURCE_FILES})
 

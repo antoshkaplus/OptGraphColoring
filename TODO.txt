@@ -1,2 +1,6 @@
 when graph is dense try to consider reverse graph.
 some sets. minimum bounds
+
+make more optimized graph structures. look something with feasible tabu search
+
+don’t look on colored graph pointing out uncolored nodes.

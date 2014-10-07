@@ -10,7 +10,8 @@
 
 ColoredGraph GC_TabuSearch::solve(const Graph& gr) {
     // how many iterations can't swap colors
-    tabuList.tenure = 100;
+    // trying out value of 10
+    tabuList.tenure = 10;
 
     ColoredGraph result(gr);
     GC_Naive naive;
