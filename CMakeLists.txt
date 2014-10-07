@@ -13,4 +13,8 @@ set(SOURCE_FILES ${SOURCE_FILES} ${HEADER_FILES})
 
 add_executable(GraphColoring ${SOURCE_FILES})
 
+target_include_directories(GraphColoring PUBLIC "/usr/local/include")
+
+find_library(ANT_LIBRARY ant)
+target_link_libraries(GraphColoring ${ANT_LIBRARY})
 
