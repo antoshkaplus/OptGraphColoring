@@ -6,7 +6,7 @@
 //  Copyright (c) 2013 Anton Logunov. All rights reserved.
 //
 
-#include "ColoredGraph.h"
+#include "ColoredGraph.hpp"
 
 
 // should be in cpp file as static method unfortunately 

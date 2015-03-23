@@ -6,4 +6,4 @@
 //  Copyright (c) 2013 Anton Logunov. All rights reserved.
 //
 
-#include "FeasibleSwapper.h"
+#include "FeasibleSwapper.hpp"

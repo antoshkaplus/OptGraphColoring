@@ -6,5 +6,5 @@
 //  Copyright (c) 2014 Anton Logunov. All rights reserved.
 //
 
-#include "GC.h"
+#include "GC.hpp"
 

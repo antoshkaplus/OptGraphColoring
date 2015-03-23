@@ -6,7 +6,7 @@
 //  Copyright (c) 2014 Anton Logunov. All rights reserved.
 //
 
-#include "GC_TabuSearch.h"
+#include "GC_TabuSearch.hpp"
 
 ColoredGraph GC_TabuSearch::solve(const Graph& gr) {
     // how many iterations can't swap colors
