@@ -23,7 +23,7 @@ using namespace std;
 
 struct TSP {
     typedef double Distance;
-    typedef size_t Count;
+    typedef int Count;
     
     struct Edge : array<City, 2> {
         Edge() {}
@@ -169,7 +169,12 @@ struct TSP_TwoOpt : TSP_Improver {
     
     double swapEpsilon;
     
+    
     TSP_TwoOpt() : swapEpsilon(1e-7) {}
+    
+    TSP_TwoOpt(double swap_epsilon) {
+        swapEpsilon = swap_epsilon;
+    }
     
     vector<City> improve(const vector<Point>& ps,
                          const vector<City>& in_tour) override {
@@ -278,6 +283,10 @@ struct TSP_ThreeOpt : TSP_Improver {
     double swapEpsilon;
     
     TSP_ThreeOpt() : swapEpsilon(1e-7) {}
+    
+    TSP_ThreeOpt(double swap_epsilon) {
+        swapEpsilon = swap_epsilon;
+    }
     
     vector<City> improve(const vector<Point>& ps,
                          const vector<City>& in_tour) override {

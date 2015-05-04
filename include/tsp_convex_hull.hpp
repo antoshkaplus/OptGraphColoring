@@ -15,7 +15,7 @@
 
 struct TSP_ConvexHull : TSP {
     vector<City> solve(const vector<Point>& cities) override {
-        
+        /*
         
         struct P {
             double distance;
@@ -110,7 +110,7 @@ struct TSP_ConvexHull : TSP {
             return;
         }
         
-        
+        */
         
 
         

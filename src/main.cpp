@@ -29,6 +29,7 @@
 #include "tsp_random_insertion.hpp"
 #include "tsp_ant_colony.hpp"
 #include "tsp_bb_cities.hpp"
+#include "tsp_simplex_insertion.hpp"
 
 using namespace std;
 
@@ -44,7 +45,14 @@ enum class Method : int {
     SHORTEST_EDGE,
     NEAREST_INSERTION,
     FARTHEST_INSERTION,
-    RANDOM_INSERTION
+    RANDOM_INSERTION,
+    SIMPLEX_INSERTION
+};
+
+enum class Improver : int {
+    TWO_OPT,
+    THREE_OPT,
+    NONE
 };
 
 
@@ -65,13 +73,21 @@ int main(int argc, const char * argv[])
         {"near_neighbor", Method::NEAREST_NEIGHBOR},
         {"near_insert", Method::NEAREST_INSERTION},
         {"far_insert", Method::FARTHEST_INSERTION},
-        {"rand_insert", Method::RANDOM_INSERTION}
+        {"rand_insert", Method::RANDOM_INSERTION},
+        {"simplex", Method::SIMPLEX_INSERTION}
+    };
+    
+    map<string, Improver> improvers = {
+        {"two_opt", Improver::TWO_OPT},
+        {"three_opt", Improver::THREE_OPT},
+        {"none", Improver::NONE}
     };
 
     ant::command_line_parser parser(argv, argc);
-    string m = parser.getValue("m");
-    string i = parser.getValue("i");
-    string o = parser.getValue("o");
+    string m = parser.getValue("sol");
+    string i = parser.getValue("in");
+    string o = parser.getValue("out");
+    string imp = parser.getValue("imp");
     ifstream in(i);
     ofstream out(o);
     
@@ -82,25 +98,28 @@ int main(int argc, const char * argv[])
         in >> points[i].x >> points[i].y;
     }
     
-    TSP_Solver *solver;
+    unique_ptr<TSP_Solver> solver;
     switch (methods[m]) {
         case Method::ANT_COLONY:
-            solver = new TSP_AntColony();
+            solver.reset(new TSP_AntColony());
             break;
         case Method::SHORTEST_EDGE:
-            solver = new TSP_ShortestEdge();
+            solver.reset(new TSP_ShortestEdge());
             break;
         case Method::NEAREST_NEIGHBOR:
-            solver = new TSP_NearestNeighbor();
+            solver.reset(new TSP_NearestNeighbor());
             break;
         case Method::NEAREST_INSERTION:
-            solver = new TSP_NearestInsertion();
+            solver.reset(new TSP_NearestInsertion());
             break;
         case Method::FARTHEST_INSERTION:
-            solver = new TSP_FarthestInsertion();
+            solver.reset(new TSP_FarthestInsertion());
             break;
         case Method::RANDOM_INSERTION:
-            solver = new TSP_RandomInsertion();
+            solver.reset(new TSP_RandomInsertion());
+            break;
+        case Method::SIMPLEX_INSERTION:
+            solver.reset(new TSP_SimplexInsertion());
             break;
         default:
             throw invalid_argument("method is unknown");
@@ -120,9 +139,22 @@ int main(int argc, const char * argv[])
         visited[c] = true;
     }
     
-    TSP_ThreeOpt improver;
-    improver.swapEpsilon = 0.1;
-    cities = improver.improve(points, cities);
+    unique_ptr<TSP_Improver> improver; 
+    Improver par = improvers.find(imp) == improvers.end() ? Improver::NONE : improvers[imp];
+    switch (par) {
+        case Improver::TWO_OPT:
+            improver.reset(new TSP_TwoOpt(0.1));
+            break;
+        case Improver::THREE_OPT:
+            improver.reset(new TSP_ThreeOpt(0.1));
+            break;
+        case Improver::NONE:
+            break;
+    }
+    
+    if (improver.get() != nullptr) {
+        cities = improver->improve(points, cities);
+    }
     
     double perimeter = Perimeter(points, cities, true);
     out << perimeter << " " << endl;

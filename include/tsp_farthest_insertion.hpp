@@ -39,16 +39,15 @@ struct TSP_FarthestInsertion : TSP_InsertionSolver {
     };
     
     vector<City> solve(const vector<Point>& points) override {
+        vector<City> startingTour = this->startingTour(points);
+        vector<Edge> edges = tourToEdges(startingTour);
+        
         set<City> outTourCities;
-        for (size_t i = 0; i < points.size(); i++) {
+        for (City i = 0; i < points.size(); ++i) {
             outTourCities.insert(i);
         }
-        
-        vector<Edge> edges;
-        vector<City> startingTour = this->startingTour(points);
-        for (Index i = 0; i < startingTour.size(); i++) {
-            edges.push_back(Edge(startingTour[i], startingTour[(i+1)%startingTour.size()]));
-            outTourCities.erase(startingTour[i]);
+        for (City i : startingTour) {
+            outTourCities.erase(i);
         }
         
         vector<Record> outTour;

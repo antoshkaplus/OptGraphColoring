@@ -4,7 +4,7 @@
 cmake_minimum_required (VERSION 2.8.11)
 project (EuclidianTSP)
 
-list(APPEND CMAKE_CXX_FLAGS "-std=c++11")
+list(APPEND CMAKE_CXX_FLAGS "-std=c++1y")
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -d -Wall")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -Wall")
