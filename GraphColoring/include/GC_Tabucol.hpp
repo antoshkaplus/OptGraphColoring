@@ -16,7 +16,7 @@
 #ifndef GraphColoring_GC_Tabucol_h
 #define GraphColoring_GC_Tabucol_h
 
-#include "ant/optimization.h"
+#include "ant/optimization/optimization.h"
 
 #include "GC.hpp"
 

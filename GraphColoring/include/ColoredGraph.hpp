@@ -18,7 +18,12 @@
 #include <cassert>
 #include <iterator>
 #include <unordered_set>
+#include <random>
+#include <algorithm>
 
+#include "ant/core/core.hpp"
+
+using namespace ant;
 using namespace std;
 
 // colors are numbers. if vertex is uncolored then it has -1?
@@ -26,59 +31,8 @@ using Node          = int;
 using Edge          = pair<int, int>;
 using AdjacencyList = vector<vector<int>>;
 using Degree        = size_t;
-using Count         = size_t;
-using Index         = size_t;
 using Color         = int;
 const int COLOR_NONE = -1;
-
-
-template <class T>
-class CountMap : public map<T, size_t> {
-public:
-    void decrease(const T& t) { decrease(t, 1); }
-    
-    void decrease(const T& t, size_t val) {
-        auto it = this->find(t);
-        if ((it->second-=val) == 0) {
-            this->erase(it);
-        }
-    }
-    
-    void increase(const T& t) { increase(t, 1); }
-    
-    void increase(const T& t, size_t val) {
-        this->emplace(t, 0).first->second+=val;
-    }
-    
-    set<T> keys() const {
-        set<T> r;
-        for (auto p : *this) {
-            r.insert(p.first);
-        }
-        return r;
-    }
-    
-    size_t get(const T& t) const {
-        auto it = this->find(t);
-        return it == this->end() ? 0 : it->second;
-    }
-    
-//    const T& minCount() {
-//        const T* key;
-//        size_t count = 0;
-//        bool initialized = false;
-//        for (auto& p : *this) {
-//            if (!initialized || count > p.second) {
-//                key = &p.first;
-//                count = p.second;
-//                initialized = true;
-//            } 
-//        }
-//        return count;
-//    }
-};
-
-
 
  
 // struct provides access on reading. 
@@ -116,7 +70,7 @@ struct Graph {
                 edges.emplace_back(i, j);
             }
         }
-        random_shuffle(edges.begin(), edges.end());
+        std::random_shuffle(edges.begin(), edges.end());
         Count edgeCountNeeded = completeness*(nodeCount*nodeCount - nodeCount)/2;
         edges.erase(edges.begin() + edgeCountNeeded, edges.end());
         return Graph(edges, nodeCount);       
@@ -150,9 +104,9 @@ private:
     vector<Color>               _coloring;
     // support data structure
     // node, color => number of adjacent nodes with that color 
-    vector<CountMap<Color>>     _adjacentNodesOfColorCount;
+    vector<ant::CountMap<Color>> _adjacentNodesOfColorCount;
     // how many nodes with the particular color
-    CountMap<Color>             _nodeCountOfColor;
+    ant::CountMap<Color>         _nodeCountOfColor;
     // nodes that are uncolored
     set<Node>                   _uncoloredNodes;
 
@@ -219,7 +173,7 @@ public:
         return _nodeCountOfColor.get(c);
     }
     
-    const CountMap<Color>& nodeCountOfColor() const {
+    const ant::CountMap<Color>& nodeCountOfColor() const {
         return _nodeCountOfColor;
     }
     
