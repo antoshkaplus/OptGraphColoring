@@ -9,7 +9,7 @@
 #ifndef EuclidianTSP_tsp_simplex_insertion_hpp
 #define EuclidianTSP_tsp_simplex_insertion_hpp
 
-#include "ant/grid.h"
+#include "ant/grid/grid.hpp"
 
 #include "tsp.hpp"
 

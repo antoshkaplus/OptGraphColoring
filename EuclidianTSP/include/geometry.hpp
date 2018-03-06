@@ -15,7 +15,7 @@
 #include <set>
 #include <array>
 
-#include "ant/geometry/d2.h"
+#include "ant/geometry/d2.hpp"
 
 using namespace std;
 using namespace ant;
@@ -24,6 +24,9 @@ using namespace ant::geometry::d2;
 
 struct Point {
     double x, y;
+    double Distance(const Point& p) const {
+        return sqrt((x-p.x)*(x-p.x) + (y-p.y)*(y-p.y));
+    }
     double distance(const Point& p) const {
         return sqrt((x-p.x)*(x-p.x) + (y-p.y)*(y-p.y));
     }

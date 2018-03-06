@@ -20,7 +20,7 @@
 #include <list>
 #include <functional>
 
-#include "ant/core.h"
+#include "ant/core/core.hpp"
 
 #include "tsp_nearest_neighbor.hpp"
 #include "tsp_shortest_edge.hpp"

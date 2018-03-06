@@ -14,6 +14,7 @@
 #include <random>
 #include <cassert>
 #include <stack>
+#include <chrono>
 
 #include "geometry.hpp"
 
@@ -168,8 +169,7 @@ struct TSP_TwoOpt : TSP_Improver {
     typedef size_t Index;
     
     double swapEpsilon;
-    
-    
+
     TSP_TwoOpt() : swapEpsilon(1e-7) {}
     
     TSP_TwoOpt(double swap_epsilon) {

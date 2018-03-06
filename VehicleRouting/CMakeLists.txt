@@ -1,0 +1,2 @@
+include_directories(include)
+add_executable(VehicleRouting_Solver src/main.cpp)
