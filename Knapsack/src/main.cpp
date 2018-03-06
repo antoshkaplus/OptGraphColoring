@@ -1,10 +1,3 @@
-//
-//  main.cpp
-//  Knapsack
-//
-//  Created by Anton Logunov on 6/19/13.
-//  Copyright (c) 2013 Anton Logunov. All rights reserved.
-//
 
 #include <fstream>
 #include <string>
