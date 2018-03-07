@@ -17,6 +17,6 @@ if (NOT ANT_LIBRARY)
 endif()
 
 
-add_executable(euclidian_tsp ${SOURCE_FILES} ${HEADER_FILES})
-target_link_libraries(euclidian_tsp ${ARMA_LIBRARY} ${ANT_LIBRARY})
+add_executable(EuclidianTSP ${SOURCE_FILES} ${HEADER_FILES})
+target_link_libraries(EuclidianTSP ${ARMA_LIBRARY} ${ANT_LIBRARY})
 

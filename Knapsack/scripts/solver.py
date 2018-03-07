@@ -8,7 +8,7 @@ def solve_it(inputData):
     f.write(inputData)
     f.close()
 
-    os.system("/Users/antoshkaplus/Documents/Coursera/DiscreteOptimization/src/DerivedData/src/Build/Products/Release/src")
+    os.system("/Users/antoshkaplus/Documents/Coursera/DiscreteOptimization/app/DerivedData/app/Build/Products/Release/app")
         
     f = open("output.txt")
     outputData = f.read()

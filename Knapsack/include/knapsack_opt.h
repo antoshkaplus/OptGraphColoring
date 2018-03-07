@@ -68,7 +68,7 @@ class KnapsackOpt {
                 best_arr = t_arr;
                 best_w = t_w;
                 best_v = t_v;
-                cout << "sol: " << best_v << endl;
+//                cout << "sol: " << best_v << endl;
             }
             return;
         }
@@ -78,7 +78,7 @@ class KnapsackOpt {
 
 
 public:
-    pair<int, vector<int>> relaxation(const vector<Item> &items, int capacity) {
+    pair<int, vector<int>> relaxation(const vector<Item>& items, int capacity) {
         vector<int> res(items.size());
         n = (int) items.size();
         k = capacity;
