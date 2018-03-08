@@ -2,13 +2,13 @@
 
 #include "support.h"
 
-class KnapsackOpt {
+class KS_BranchBoundFraction {
 
-    vector<int> t_arr;
-    int t_v, t_w;
+    vector<int> current_arr;
+    int current_v, current_w;
 
-    int r_w;
-    double r_v;
+    int bound_w;
+    double bound_v;
 
     vector<int> best_arr;
     int best_v, best_w;
@@ -18,64 +18,63 @@ class KnapsackOpt {
     vector<int> w, v;
 
     void take(int i, int j, int sz) {
-        if (t_w + w[i] <= k) {
-            t_w += w[i];
-            t_v += v[i];
-            t_arr[i] = 1;
+        if (current_w + w[i] <= k) {
+            current_w += w[i];
+            current_v += v[i];
+            current_arr[i] = 1;
             go(i + 1, j, sz);
-            t_w -= w[i];
-            t_v -= v[i];
+            current_w -= w[i];
+            current_v -= v[i];
         }
     }
 
+    // todo can i == j really ???
     void skip(int i, int j, int sz) {
-        int r_w_old = r_w;
-        double r_v_old = r_v;
+        int bound_w_old = bound_w;
+        double bound_v_old = bound_v;
         // always free partial size first
         if (j < n) {
-            r_w -= sz;
-            r_v -= 1. * sz * v[j] / w[j];
+            bound_w -= sz;
+            bound_v -= 1. * sz * v[j] / w[j];
         }
         if (i == j) {
             //cout << "hoh" << endl;
             j++;
         } else {
-            r_w -= w[i];
-            r_v -= v[i];
+            bound_w -= w[i];
+            bound_v -= v[i];
         }
-        while (j < n && r_w + w[j] <= k) {
-            r_w += w[j];
-            r_v += v[j];
+        while (j < n && bound_w + w[j] <= k) {
+            bound_w += w[j];
+            bound_v += v[j];
             j++;
         }
         sz = 0;
         if (j < n) {
-            sz = k - r_w;
-            r_w = k;
-            r_v += 1. * sz * v[j] / w[j];
+            sz = k - bound_w;
+            bound_w = k;
+            bound_v += 1. * sz * v[j] / w[j];
         }
-        if (r_v > best_v) {
-            t_arr[i] = 0;
+        if (bound_v > best_v) {
+            current_arr[i] = 0;
             go(i + 1, j, sz);
         }
-        r_w = r_w_old;
-        r_v = r_v_old;
+        bound_w = bound_w_old;
+        bound_v = bound_v_old;
     }
 
     void go(int i, int j, int sz) {
         if (i == n) {
-            if (t_v > best_v) {
-                best_arr = t_arr;
-                best_w = t_w;
-                best_v = t_v;
-//                cout << "sol: " << best_v << endl;
+            if (current_v > best_v) {
+                best_arr = current_arr;
+                best_w = current_w;
+                best_v = current_v;
             }
             return;
         }
         take(i, j, sz);
         skip(i, j, sz);
     }
-
 
 public:
     pair<int, vector<int>> relaxation(const vector<Item>& items, int capacity) {
@@ -99,22 +98,22 @@ public:
         }
         best_v = -1;
         int i = 0;
-        r_w = 0;
-        r_v = 0.;
-        while (i < n && r_w + w[i] <= k) {
-            r_w += w[i];
-            r_v += v[i];
+        bound_w = 0;
+        bound_v = 0.;
+        while (i < n && bound_w + w[i] <= k) {
+            bound_w += w[i];
+            bound_v += v[i];
             i++;
         }
         int sz = 0;
         if (i < n) {
-            sz = k - r_w;
-            r_w = k;
-            r_v += 1. * sz * v[i] / w[i];
+            sz = k - bound_w;
+            bound_w = k;
+            bound_v += 1. * sz * v[i] / w[i];
         }
-        t_w = 0;
-        t_v = 0;
-        t_arr.resize(n, 0);
+        current_w = 0;
+        current_v = 0;
+        current_arr.resize(n, 0);
 
         go(0, i, sz);
 

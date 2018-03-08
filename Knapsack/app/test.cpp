@@ -2,22 +2,21 @@
 #include <gtest/gtest.h>
 
 #include "support.h"
-#include "knapsack_opt.h"
-#include "knapsack.h"
+#include "branch_bound_fraction.h"
+#include "branch_bound.h"
 
 TEST(Knapsack, Methods) {
-    auto path = "data/ks_30_0";
+    auto path = "data/ks_100_0";
     std::ifstream in(path);
     auto pr = ReadProblem(in);
 
-    Knapsack knapsack;
-    KnapsackOpt knapsackOpt;
+    KS_BranchBound knapsack;
+    KS_BranchBoundFraction knapsackOpt;
 
     std::vector solutions = {
         knapsack.relaxation(pr.items, pr.capacity),
         knapsackOpt.relaxation(pr.items, pr.capacity),
-        usual(pr.items, pr.capacity),
-        usualOpt(pr.items, pr.capacity)
+        usual(pr.items, pr.capacity)
     };
 
     std::vector<int> ps;

@@ -2,8 +2,8 @@
 #include <benchmark/benchmark.h>
 
 #include "support.h"
-#include "knapsack.h"
-#include "knapsack_opt.h"
+#include "branch_bound.h"
+#include "branch_bound_fraction.h"
 
 
 void Knapsack_BM(benchmark::State& state) {
@@ -38,20 +38,9 @@ void Usual_BM(benchmark::State& state) {
     }
 }
 
-void UsualOpt_BM(benchmark::State& state) {
-    auto path = "data/ks_" + std::to_string(state.range(0)) + "_0";
-    std::ifstream in(path);
-    auto pr = ReadProblem(in);
-
-    for (auto _ : state) {
-        usualOpt(pr.items, pr.capacity);
-    }
-}
-
 BENCHMARK(Knapsack_BM)->Arg(30)->Arg(50)->Arg(100);
 BENCHMARK(KnapsackOpt_BM)->Arg(30)->Arg(200)->Arg(10000);
 BENCHMARK(Usual_BM)->Arg(30)->Arg(200);
-BENCHMARK(UsualOpt_BM)->Arg(30)->Arg(200)->Arg(10000);
 
 
 int main(int argc, char **argv) {

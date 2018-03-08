@@ -9,8 +9,8 @@
 using namespace std;
 
 struct Item {
-    int w;
-    int v;
+    int w {};
+    int v {};
 };
 
 struct Problem {
@@ -82,43 +82,6 @@ pair<int, vector<int>> usual(const vector<Item>& items, int capacity) {
 
     return pair<int, vector<int>>(buffer[(capacity + 1) * (itemCount + 1) - 1], res);
 }
-
-// considered that each item can be used only once
-pair<int, vector<int>> usualOpt(const vector<Item>& items, int capacity) {
-    int itemCount = items.size();
-
-    // try to sort items by effectiveness
-
-    // does't really work because don't check the value
-
-    vector<int> buffer(capacity+1, 0);
-    buffer[0] = -1;
-
-    for (int i = 0; i < itemCount; i++) {
-        const Item& t = items[i];
-        for (auto c = capacity; c >= t.w; --c)
-        {
-            if (buffer[c] == 0 && buffer[c - t.w] != 0) {
-                buffer[c] = i;
-            }
-        }
-        if (buffer[capacity] != 0) break; // check to leave early
-    }
-
-    vector<int> res(items.size());
-
-    while (buffer[capacity] == 0) --capacity;
-
-    auto value = 0;
-    auto c = capacity;
-    while (c != 0) {
-        res[buffer[c]] = 1;
-        value += items[buffer[c]].v;
-        c -= items[buffer[c]].w;
-    }
-    return pair<int, vector<int>>(value, res);
-}
-
 
 // considered that each item can be used only once
 pair<int, vector<int>> greedy(const vector<Item>& items, int capacity) {

@@ -2,8 +2,8 @@
 #include <fstream>
 #include <string>
 
-#include "knapsack.h"
-#include "knapsack_opt.h"
+#include "branch_bound.h"
+#include "branch_bound_fraction.h"
 
 using namespace std;
 
@@ -20,7 +20,7 @@ int main(int argc, const char *argv[]) {
     for (Item& i : items) {
         in >> i.v >> i.w;
     }
-    KnapsackOpt kp;
+    KS_BranchBoundFraction kp;
     pair<int, vector<int>> res = kp.relaxation(items, K);
     if (debug) {
         pair<int, vector<int>> res2 = usual(items, K);

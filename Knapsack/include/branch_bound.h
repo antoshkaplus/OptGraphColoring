@@ -2,58 +2,57 @@
 
 #include "support.h"
 
-class Knapsack {
-    vector<int> t_arr;
-    int t_v, t_w;
-    int r_v, r_w;
+class KS_BranchBound {
+    
+    vector<int> current_arr;
+    int current_v, current_w;
+    int bound_v, bound_w;
     vector<int> best_arr;
     int best_v, best_w;
     int n, k;
     vector<int> w, v; // sorted by effectiveness
 
     void take(int i, int j) {
-        if (t_w + w[i] <= k) {
-            t_w += w[i];
-            t_v += v[i];
-            t_arr[i] = 1;
+        if (current_w + w[i] <= k) {
+            current_w += w[i];
+            current_v += v[i];
+            current_arr[i] = 1;
             go(i + 1, j);
-            t_w -= w[i];
-            t_v -= v[i];
+            current_w -= w[i];
+            current_v -= v[i];
         }
     }
 
     void skip(int i, int j) {
-        int r_w_old = r_w;
-        int r_v_old = r_v;
-        r_w -= w[i];
-        r_v -= v[i];
-        while (j < n && r_w < k) {
-            r_w += w[j];
-            r_v += v[j];
+        int bound_w_old = bound_w;
+        int bound_v_old = bound_v;
+        bound_w -= w[i];
+        bound_v -= v[i];
+        while (j < n && bound_w < k) {
+            bound_w += w[j];
+            bound_v += v[j];
             j++;
         }
-        if (r_v > best_v) {
-            t_arr[i] = 0;
+        if (bound_v > best_v) {
+            current_arr[i] = 0;
             go(i + 1, j);
         }
-        r_w = r_w_old;
-        r_v = r_v_old;
+        bound_w = bound_w_old;
+        bound_v = bound_v_old;
     }
 
     void go(int i, int j) {
         if (i == n) {
-            if (t_v > best_v) {
-                best_arr = t_arr;
-                best_w = t_w;
-                best_v = t_v;
-//                cout << "sol: " << best_v << endl;
+            if (current_v > best_v) {
+                best_arr = current_arr;
+                best_w = current_w;
+                best_v = current_v;
             }
             return;
         }
         take(i, j);
         skip(i, j);
     }
-
 
 public:
     pair<int, vector<int>> relaxation(const vector<Item>& items, int capacity) {
@@ -76,17 +75,17 @@ public:
             v[i] = items[indices[i]].v;
         }
         best_v = -1;
-        r_w = 0;
-        r_v = 0;
+        bound_w = 0;
+        bound_v = 0;
         int i = 0;
-        while (i < n && r_w < k) {
-            r_w += w[i];
-            r_v += v[i];
+        while (i < n && bound_w < k) {
+            bound_w += w[i];
+            bound_v += v[i];
             i++;
         }
-        t_w = 0;
-        t_v = 0;
-        t_arr.resize(n, 0);
+        current_w = 0;
+        current_v = 0;
+        current_arr.resize(n, 0);
 
         go(0, i);
 
