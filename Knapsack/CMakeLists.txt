@@ -6,4 +6,4 @@ add_executable(Knapsack_BM app/benchmark.cpp)
 target_link_libraries(Knapsack_BM benchmark)
 
 add_executable(Knapsack_Test app/test.cpp)
-target_link_libraries(Knapsack_Test gtest)
+target_link_libraries(Knapsack_Test gtest pthread)

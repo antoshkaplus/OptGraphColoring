@@ -12,12 +12,16 @@ class KS_BranchBound {
     int n, k;
     vector<int> w, v; // sorted by effectiveness
 
+    // i - next to decide to include in knapsack
+    // j - next element to be used for upper bound
+
     void take(int i, int j) {
         if (current_w + w[i] <= k) {
             current_w += w[i];
             current_v += v[i];
             current_arr[i] = 1;
             go(i + 1, j);
+            current_arr[i] = 0;
             current_w -= w[i];
             current_v -= v[i];
         }
@@ -34,7 +38,6 @@ class KS_BranchBound {
             j++;
         }
         if (bound_v > best_v) {
-            current_arr[i] = 0;
             go(i + 1, j);
         }
         bound_w = bound_w_old;
@@ -42,7 +45,7 @@ class KS_BranchBound {
     }
 
     void go(int i, int j) {
-        if (i == n) {
+        if (i == j) {
             if (current_v > best_v) {
                 best_arr = current_arr;
                 best_w = current_w;
@@ -94,5 +97,4 @@ public:
         }
         return pair<int, vector<int>>(best_v, res);
     }
-
 };

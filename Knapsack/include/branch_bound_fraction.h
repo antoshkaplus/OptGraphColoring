@@ -23,12 +23,12 @@ class KS_BranchBoundFraction {
             current_v += v[i];
             current_arr[i] = 1;
             go(i + 1, j, sz);
+            current_arr[i] = 0;
             current_w -= w[i];
             current_v -= v[i];
         }
     }
 
-    // todo can i == j really ???
     void skip(int i, int j, int sz) {
         int bound_w_old = bound_w;
         double bound_v_old = bound_v;
@@ -37,26 +37,28 @@ class KS_BranchBoundFraction {
             bound_w -= sz;
             bound_v -= 1. * sz * v[j] / w[j];
         }
+
         if (i == j) {
-            //cout << "hoh" << endl;
             j++;
         } else {
             bound_w -= w[i];
             bound_v -= v[i];
         }
+
         while (j < n && bound_w + w[j] <= k) {
             bound_w += w[j];
             bound_v += v[j];
             j++;
         }
+
         sz = 0;
         if (j < n) {
             sz = k - bound_w;
             bound_w = k;
             bound_v += 1. * sz * v[j] / w[j];
         }
+
         if (bound_v > best_v) {
-            current_arr[i] = 0;
             go(i + 1, j, sz);
         }
         bound_w = bound_w_old;
@@ -122,5 +124,4 @@ public:
         }
         return pair<int, vector<int>>(best_v, res);
     }
-
 };
