@@ -79,6 +79,7 @@ class KS_BranchBoundFraction {
     }
 
 public:
+    // the method shouldn't be called relaxation probably
     pair<int, vector<int>> relaxation(const vector<Item>& items, int capacity) {
         vector<int> res(items.size());
         n = (int) items.size();

@@ -13,7 +13,7 @@ target_link_libraries(GraphColoring
 
 add_executable(GraphColoring_Solver ${SOLVER_FILES})
 target_link_libraries(GraphColoring_Solver
-    ${ANT_LIBRARY}
-    GraphColoring)
+        ${ANT_LIBRARY}
+        GraphColoring)
 
 

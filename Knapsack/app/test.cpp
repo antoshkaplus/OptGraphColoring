@@ -4,19 +4,22 @@
 #include "support.h"
 #include "branch_bound_fraction.h"
 #include "branch_bound.h"
+#include "lp.hpp"
 
 TEST(Knapsack, Methods) {
-    auto path = "data/ks_100_0";
+    auto path = "data/ks_19_0";
     std::ifstream in(path);
     auto pr = ReadProblem(in);
 
     KS_BranchBound knapsack;
     KS_BranchBoundFraction knapsackOpt;
+    KS_LP knapsack_LP;
 
     std::vector solutions = {
         knapsack.relaxation(pr.items, pr.capacity),
         knapsackOpt.relaxation(pr.items, pr.capacity),
-        usual(pr.items, pr.capacity)
+        usual(pr.items, pr.capacity),
+        knapsack_LP.solve(pr.items, pr.capacity)
     };
 
     std::vector<int> ps;
