@@ -1,9 +1,11 @@
 #pragma once
 
+#include <coin/ClpSimplex.hpp>
 #include <coin/CoinModel.hpp>
 #include <coin/OsiClpSolverInterface.hpp>
 #include <coin/CbcModel.hpp>
 
+using namespace std;
 
 struct KS_Solver : OsiClpSolverInterface {
 
@@ -28,7 +30,7 @@ public:
         solver.setObjSense(-1);
 
         CbcModel model(solver);
-        model.setLogLevel(0);
+//        model.setLogLevel(0);
         model.branchAndBound();
         const double *solution = model.bestSolution();
 

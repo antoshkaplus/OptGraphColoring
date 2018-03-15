@@ -83,17 +83,22 @@ pair<int, vector<int>> usual(const vector<Item>& items, int capacity) {
     return pair<int, vector<int>>(buffer[(capacity + 1) * (itemCount + 1) - 1], res);
 }
 
+vector<int> effectiveness(const vector<Item>& items) {
+    auto val = [&](int i) {
+        return 1. * items[i].v / items[i].w;
+    };
+    vector<int> indices(items.size());
+    std::iota(indices.begin(), indices.end(), 0);
+    std::sort(indices.begin(), indices.end(), [&](int i1, int i2) { return val(i1) > val(i2); });
+    return indices;
+}
+
 // considered that each item can be used only once
 pair<int, vector<int>> greedy(const vector<Item>& items, int capacity) {
     vector<int> res(items.size());
     int n = (int) items.size();
-    vector<double> keys(n);
-    for (int i = 0; i < n; i++) {
-        keys[i] = 1. * items[i].v / items[i].w;
-    }
-    vector<int> indices(n);
-    std::iota(indices.begin(), indices.end(), 0);
-    std::sort(indices.begin(), indices.end(), [&keys](int i1, int i2) { return keys[i1] > keys[i2]; });
+
+    vector<int> indices = effectiveness(items);
 
     int v = 0, i = 0, k = capacity;
     while ((k = k - items[indices[i]].w) >= 0 && i < n) {
@@ -101,4 +106,18 @@ pair<int, vector<int>> greedy(const vector<Item>& items, int capacity) {
         v += items[indices[i++]].v;
     }
     return pair<int, vector<int>>(v, res);
+}
+
+double relaxation(const vector<Item>& items, int capacity) {
+    vector<int> indices = effectiveness(items);
+
+    double k = capacity;
+    double v = 0;
+    for (auto i : indices) {
+        double w = min<double>(k, items[i].w);
+        v += w * items[i].v / items[i].w;
+        k -= w;
+        if (k == 0) break;
+    }
+    return v;
 }
