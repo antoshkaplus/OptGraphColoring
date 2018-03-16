@@ -23,7 +23,7 @@ endforeach( OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES )
 include_directories("/usr/local/include")
 include_directories("/usr/include")
 
-list(APPEND COIN_LIBS CoinUtils Cbc Clp OsiClp)
+list(APPEND COIN_LIBS CoinUtils Cbc Clp OsiClp Cgl)
 
 add_subdirectory(EuclidianTSP)
 add_subdirectory(FacilityLocation)
