@@ -1,105 +1,19 @@
-//
-//  GraphColoring.h
-//  GraphColoring
-//
-//  Created by Anton Logunov on 6/25/13.
-//  Copyright (c) 2013 Anton Logunov. All rights reserved.
-//
+#pragma once
 
-#ifndef __GraphColoring__GraphColoring__
-#define __GraphColoring__GraphColoring__
+#include "util.hpp"
 
-#include <iostream>
-#include <vector>
-#include <map>
-#include <set>
-#include <stack>
-#include <numeric>
-#include <cassert>
-#include <iterator>
-#include <unordered_set>
-#include <random>
-#include <algorithm>
-
-#include "ant/core/core.hpp"
-
-using namespace ant;
-using namespace std;
-
-// colors are numbers. if vertex is uncolored then it has -1?
-using Node          = int;
-using Edge          = pair<int, int>;
-using AdjacencyList = vector<vector<int>>;
-using Degree        = size_t;
-using Color         = int;
-const int COLOR_NONE = -1;
-
- 
-// struct provides access on reading. 
-// const prevents alternating variables 
-// immutable class
-struct Graph {
-
-    const size_t         nodeCount;
-    const AdjacencyList  adjacencyList;
-
-    Graph() : nodeCount(0) {}
-    Graph(const AdjacencyList& adjList) : 
-        nodeCount(adjList.size()),
-        adjacencyList(adjList) {}
-    
-    Graph(const Graph& gr) : 
-        nodeCount(gr.nodeCount), 
-        adjacencyList(gr.adjacencyList) {} 
-        
-    Graph(const vector<Edge>& edges, size_t nodeCount) : 
-        nodeCount(nodeCount),
-        adjacencyList(edgesToAdjacencyList(edges, nodeCount)) {}
-    
-    Degree degree(Node i) const {
-        return adjacencyList[i].size();
-    }
-    
-    // completeness between 0 and 1 : ratio of edges
-    static Graph random(Count nodeCount, double completeness) {
-        AdjacencyList adjList(nodeCount);
-        // very stupid algorithm actually
-        vector<Edge> edges;
-        for (auto i = 0; i < nodeCount; ++i) {
-            for (auto j = i+1; j < nodeCount; ++j) {
-                edges.emplace_back(i, j);
-            }
-        }
-        std::random_shuffle(edges.begin(), edges.end());
-        Count edgeCountNeeded = completeness*(nodeCount*nodeCount - nodeCount)/2;
-        edges.erase(edges.begin() + edgeCountNeeded, edges.end());
-        return Graph(edges, nodeCount);       
-    }
-    
-    vector<Edge> edges() const {
-        vector<Edge> es;
-        for (int i = 0; i < nodeCount; ++i) {
-            for (auto j : adjacencyList[i]) {
-                if (j > i) continue;
-                es.emplace_back(i, j);
-            }
-        }
-        return es;
-    }
-        
-private:
-    static AdjacencyList edgesToAdjacencyList(const vector<Edge>& edges, size_t nodeCount);
-    
-
-};
 
 // if graph is dence it's much better to keep adjacent colors in array and not map
 // also it's much better to make colors as a sequence 
 
 // mutable class
 // here we expect that colors could be any number and not necessarily ordered
+
+// instead of inheritance use shared_ptr to reuse graph
+// can also use template to pick reuse or not
 class ColoredGraph : public Graph {
 private:
+
     // node => color
     vector<Color>               _coloring;
     // support data structure
@@ -113,26 +27,26 @@ private:
 public:
     ColoredGraph() {}
     ColoredGraph(const Graph& gr) : Graph(gr) {
-        _coloring.resize(nodeCount, COLOR_NONE);
-        _adjacentNodesOfColorCount.resize(nodeCount);
+        _coloring.resize(nodeCount(), COLOR_NONE);
+        _adjacentNodesOfColorCount.resize(nodeCount());
         // _nodeCountOfColor nothing i can initialize
-        for (int i = 0; i < nodeCount; i++) {
+        for (int i = 0; i < nodeCount(); i++) {
             _uncoloredNodes.insert(i);
         }
     }
 
-    ColoredGraph(const AdjacencyList& adjList, const vector<Color>& coloring) 
-        : Graph(adjList), 
+    ColoredGraph(const Graph& gr, const vector<Color>& coloring)
+        : Graph(gr),
           _coloring(coloring) {
         
-        _adjacentNodesOfColorCount.resize(nodeCount);
-        for (Node i = 0; i < nodeCount; i++) {
+        _adjacentNodesOfColorCount.resize(nodeCount());
+        for (Node i = 0; i < nodeCount(); i++) {
             if (color(i) == COLOR_NONE) {
                 _uncoloredNodes.insert(i);
                 continue;
             }
             
-            for (Node j : adjacencyList[i]) {
+            for (Node j : nextNodes(i)) {
                 _adjacentNodesOfColorCount[j].increase(color(i));
             }
             _nodeCountOfColor.increase(color(i));
@@ -187,7 +101,7 @@ public:
     
     size_t adjacentUncoloredNodeCount(Node i) const {
         size_t count = 0;
-        for (Node j : adjacencyList[i]) {
+        for (Node j : nextNodes(i)) {
             if (_uncoloredNodes.count(j)) count++;
         }
         return count;
@@ -217,7 +131,7 @@ public:
     void unsetColor(int i) {
         int c = color(i);
         assert(c != -1); // unsetting uncolored node!
-        for (int j : adjacencyList[i]) {
+        for (int j : nextNodes(i)) {
             _adjacentNodesOfColorCount[j].decrease(c);
         }
         _nodeCountOfColor.decrease(c);
@@ -234,7 +148,7 @@ public:
     // set a color of an !!!uncolored node!!!
     void setColor(int i, int c) {
         assert(color(i) == -1); // setting color of colored node!;
-        for (int j : adjacencyList[i]) {
+        for (int j : nextNodes(i)) {
             _adjacentNodesOfColorCount[j].increase(c);
         }
         _nodeCountOfColor.increase(c);
@@ -287,7 +201,7 @@ public:
             Color c = color(i) == c0 ? c1 : c0;
             resetColor(i, c);
             recoloredNodes.insert(i);
-            for (Node j : adjacencyList[i]) {
+            for (Node j : nextNodes(i)) {
                 if (color(j) == c && recoloredNodes.count(j) == 0) {
                     nodesToHandle.push(j);
                 } 
@@ -296,9 +210,11 @@ public:
     }
 };
 
- 
 
-#endif /* defined(__GraphColoring__GraphColoring__) */
-
-
-
+bool isFeasibleColoring(const ColoredGraph& c_gr) {
+    if (c_gr.uncoloredNodeCount() > 0) return false;
+    for (Node i = 0; i < c_gr.nodeCount(); i++) {
+        if (c_gr.adjacentNodesOfColorCount(i, c_gr.color(i)) > 0) return false;
+    }
+    return true;
+}

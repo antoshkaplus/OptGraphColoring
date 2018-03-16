@@ -1,13 +1,4 @@
-//
-//  GC.h
-//  GraphColoring
-//
-//  Created by Anton Logunov on 3/25/14.
-//  Copyright (c) 2014 Anton Logunov. All rights reserved.
-//
-
-#ifndef __GraphColoring__GC__
-#define __GraphColoring__GC__
+#pragma once
 
 #include <iostream>
 
@@ -18,8 +9,24 @@
 struct GC {
     virtual ColoredGraph solve(const Graph& gr) = 0;
     virtual string name() = 0;
-}; 
+    virtual ~GC() {}
+};
 
+
+void compareMethods(vector<unique_ptr<GC>>& methods) {
+    Count node_count = 100;
+    for (auto c = 0.5; c <= 0.6; c += 0.1) {
+        Graph gr = graph::BuildRandom<false, int16_t>(node_count, c);
+        for (auto& m : methods) {
+            clock_t start = clock();
+            int color_count = m->solve(gr).colorCount();
+            clock_t finish = clock();
+            cout << "name: " << m->name()
+                 << "; colors:" << color_count
+                 << ", time: " << finish - start << endl;
+        }
+    }
+}
 
 
 struct GC_Naive : GC {
@@ -28,20 +35,11 @@ struct GC_Naive : GC {
         ColoredGraph cc(gr), &c_gr = cc;
         Color currentColor = 0; 
         while (!c_gr.uncoloredNodes().empty()) {
-            set<Node> coloredThisTurn;
             for (Node i : c_gr.uncoloredNodes()) {
-               bool feasibleColor = true;
-               for (Node j : c_gr.adjacencyList[i]) {
-                   if (coloredThisTurn.count(j)) {
-                       feasibleColor = false;
-                       break;
-                   }
-               }
-               if (feasibleColor) {
-                   coloredThisTurn.insert(i);
+               if (c_gr.adjacentNodesOfColorCount(i, currentColor) == 0) {
+                   c_gr.setColor(i, currentColor);
                }
             }
-            for (Node i : coloredThisTurn) c_gr.setColor(i, currentColor);
             currentColor++;
         }
         return c_gr;
@@ -58,7 +56,7 @@ struct GC_Naive_2 : GC {
     ColoredGraph solve(const Graph& gr) {
         ColoredGraph cc(gr), &c_gr = cc;
         Color currentColor = 0; 
-        for (Node n = 0; n < c_gr.nodeCount; ++n) {
+        for (Node n = 0; n < c_gr.nodeCount(); ++n) {
             for (Color c = 0; c <= currentColor; ++c) {
                 if (c_gr.adjacentNodesOfColorCount(n, c) == 0) {
                     c_gr.setColor(n, c);
@@ -76,13 +74,4 @@ struct GC_Naive_2 : GC {
     string name() {
         return "naive_2";
     }
-
 };
-
-
-#endif /* defined(__GraphColoring__GC__) */
-
-
-
-
-

@@ -1,20 +1,9 @@
-//
-//  GC_Tabucol.h
-//  GraphColoring
-//
-//  Created by Anton Logunov on 10/6/14.
-//
-// 
-
+#pragma once
 
 // 
 // algorithm by A.Hertz and D. de Werra
 // reference: Using tabu search techniques for graph coloring
-//  
-
-
-#ifndef GraphColoring_GC_Tabucol_h
-#define GraphColoring_GC_Tabucol_h
+//
 
 #include "ant/optimization/optimization.h"
 
@@ -71,13 +60,13 @@ public:
                         minColor = color;
                     }
                 }
-                for (auto n = 0; n < c_gr.nodeCount; ++n) {
+                for (auto n = 0; n < c_gr.nodeCount(); ++n) {
                     if (c_gr.color(n) == minColor) {
                         if (changeColorToNonAdjacent(n, &c_gr)) continue;
                         changeColorToAdjacent(n, &c_gr);
                     }
                 }
-                for (auto n = 0; n < c_gr.nodeCount; ++n) {
+                for (auto n = 0; n < c_gr.nodeCount(); ++n) {
                     if (c_gr.adjacentNodesWithSameColorCount(n) > 0) {
                         conflicting_nodes_.insert(n);
                     }
@@ -146,7 +135,7 @@ private:
         assert(minColor != -1); 
         tabu_list_.insert(key(n, c_gr->color(n)), tenure(), current_iteration_);
         c_gr->setColor_2(n, minColor);
-        for (auto nn : c_gr->adjacencyList[n]) {
+        for (auto nn : c_gr->nextNodes(n)) {
             if (c_gr->color(nn) == minColor) conflicting_nodes_.insert(nn);
         }
 
@@ -165,7 +154,7 @@ private:
                 tabu_list_.insert(key(n, c_gr->color(n)), tenure(), current_iteration_);
                 Color c = p.first;
                 c_gr->setColor_2(n, c);
-                for (auto nn : c_gr->adjacencyList[n]) {
+                for (auto nn : c_gr->nextNodes(n)) {
                     if (c_gr->color(nn) == c) conflicting_nodes_.insert(nn);
                 }
                 return;
@@ -255,7 +244,7 @@ private:
     
     
     size_t key(Node node, Color color) const {
-        return graph_->nodeCount * color + node;
+        return graph_->nodeCount() * color + node;
     }
     
     
@@ -264,7 +253,3 @@ private:
     }
 
 };
-
-
-
-#endif

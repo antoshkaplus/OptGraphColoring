@@ -1,19 +1,10 @@
-//
-//  InfeasibleSwapper.h
-//  GraphColoring
-//
-//  Created by Anton Logunov on 6/26/13.
-//  Copyright (c) 2013 Anton Logunov. All rights reserved.
-//
-
-#ifndef __GraphColoring__InfeasibleSwapper__
-#define __GraphColoring__InfeasibleSwapper__
+#pragma once
 
 #include <iostream>
 #include <unordered_set>
 
 #include "ColoredGraph.hpp"
-/*
+
 struct InfeasibleSwapper : ColoredGraph {
     time_t time;
     vector<int> feasibleColoring;
@@ -133,5 +124,3 @@ struct InfeasibleSwapper : ColoredGraph {
         return feasibleColoring;
     }  
 };
-*/
-#endif /* defined(__GraphColoring__InfeasibleSwapper__) */

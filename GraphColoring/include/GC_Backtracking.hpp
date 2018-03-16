@@ -1,13 +1,4 @@
-//
-//  BranchAndPruneNodeLevel.h
-//  GraphColoring
-//
-//  Created by Anton Logunov on 6/25/13.
-//  Copyright (c) 2013 Anton Logunov. All rights reserved.
-//
-
-#ifndef __GraphColoring__BranchAndPruneNodeLevel__
-#define __GraphColoring__BranchAndPruneNodeLevel__
+#pragma once
 
 #include <iostream>
 #include <chrono>
@@ -16,7 +7,7 @@
 
 
 // BB stays for branch and bound
-struct GC_BB_NodeLevel : GC {
+struct GC_Backtracking : GC {
     typedef chrono::seconds Duration;
     typedef chrono::system_clock Clock;
     typedef chrono::time_point<Clock> Time;
@@ -27,7 +18,7 @@ private:
     
 public:
     // duration in seconds!!!
-    GC_BB_NodeLevel(const Duration& duration) : duration(duration) {}
+    GC_Backtracking(const Duration& duration) : duration(duration) {}
     
     bool isVerbose() {
         return _verbose;
@@ -88,7 +79,12 @@ public:
         }
         return result;
     }
-    
+
+    string name() {
+        return "Backtracking";
+    }
+
+private:
     // taking node with maximum adjacent colors (pruning possible colors to try)
     // if have same amount of adjacent colors take one with greater uncolored node count
     Node chooseNextUncoloredNode(const ColoredGraph& c_gr) {
@@ -120,6 +116,3 @@ public:
         return result;
     }
 };
-
-
-#endif /* defined(__GraphColoring__BranchAndPruneNodeLevel__) */

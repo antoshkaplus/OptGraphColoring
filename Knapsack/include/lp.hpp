@@ -6,6 +6,7 @@
 #include <coin/CbcModel.hpp>
 #include <coin/CbcSimpleInteger.hpp>
 #include <coin/CglKnapsackCover.hpp>
+#include <coin/CbcCompareDepth.hpp>
 
 
 using namespace std;
@@ -40,10 +41,12 @@ public:
         //model.addCutGenerator(&generator, 0, "knapsack");
 
 
-        model.initialSolve();
+        //model.initialSolve();
 
         setPriority(model, items);
 
+        CbcCompareDepth depthCompare;
+//        model.setNodeComparison(depthCompare);
 
         const double *initSolution = model.solver()->getColSolution();
         vector<double> initRes(initSolution, initSolution+items.size());

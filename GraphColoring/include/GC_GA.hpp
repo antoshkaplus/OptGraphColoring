@@ -1,10 +1,4 @@
-// 
-// GA applyed to the Graph Coloring Problem
-// authors: Musa M. Hindi and Roman V. Yampolskiy
-//
-
-#ifndef __GC_GA_H__
-#define __GC_GA_H__
+#pragma once
 
 #include <chrono>
 #include <random>
@@ -59,15 +53,18 @@ public:
     
     
     ColoredGraph solve(const Graph& gr) override {
-        node_distr_ = uniform_int_distribution<>(0, gr.nodeCount-1);
+        node_distr_ = uniform_int_distribution<>(0, gr.nodeCount()-1);
         // always init edges first
-        edges_ = gr.edges();
+        edges_.clear();
+        graph::ForEachEdge(gr, [&](auto i, auto j) {
+            edges_.emplace_back(i, j);
+        });
         graph_ = &gr;
         
         GC_Naive_2 naive;
         ColoredGraph c_gr = naive.solve(gr); 
         Count color_count = c_gr.colorCount();
-        int node_count = gr.nodeCount;
+        int node_count = gr.nodeCount();
         Coloring coloring = c_gr.coloring();
         
         // has time
@@ -103,7 +100,7 @@ public:
             int i = min_element(v_0.begin(), v_0.end()) - v_0.begin();
             coloring = p_0[i];
         }
-        return ColoredGraph(gr.adjacencyList, coloring);
+        return ColoredGraph(gr, coloring);
     }
 
 
@@ -174,7 +171,7 @@ private:
                           colors.end(), 
                           false);
                 
-                for (auto k : graph_->adjacencyList[i]) {
+                for (auto k : graph_->nextNodes(i)) {
                     colors[child[k]] = true;
                 }
                 auto& valid = valid_colors_buffer_;
@@ -265,7 +262,4 @@ private:
         return population;
     }
    
-}; 
-
-
-#endif
+};

@@ -1,13 +1,4 @@
-//
-//  FeasibleSwapper.h
-//  GraphColoring
-//
-//  Created by Anton Logunov on 6/25/13.
-//  Copyright (c) 2013 Anton Logunov. All rights reserved.
-//
-
-#ifndef __GraphColoring__FeasibleSwapper__
-#define __GraphColoring__FeasibleSwapper__
+#pragma once
 
 #include <iostream>
 
@@ -77,7 +68,6 @@ struct FeasibleSwapper : ColoredGraph {
       : ColoredGraph(adjList, solution), time(time) {}
 };
 */
-#endif /* defined(__GraphColoring__FeasibleSwapper__) */
 
 
 
