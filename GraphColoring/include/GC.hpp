@@ -35,7 +35,8 @@ struct GC_Naive : GC {
         ColoredGraph cc(gr), &c_gr = cc;
         Color currentColor = 0; 
         while (!c_gr.uncoloredNodes().empty()) {
-            for (Node i : c_gr.uncoloredNodes()) {
+            auto uncoloredNodes = c_gr.uncoloredNodes();
+            for (Node i : uncoloredNodes) {
                if (c_gr.adjacentNodesOfColorCount(i, currentColor) == 0) {
                    c_gr.setColor(i, currentColor);
                }

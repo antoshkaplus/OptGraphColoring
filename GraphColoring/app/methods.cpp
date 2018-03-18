@@ -21,7 +21,7 @@ int main(int argc, const char * argv[]) {
         ifstream in(Format("data/gc_%s", s));
         auto gr = ReadProblem(in);
         auto c_gr = solver.solve(gr);
-        cout << s << " : " << c_gr.colorCount() << endl;
+        cout << s << " : " << c_gr.colorCount() << " iterations: " << solver.iterations() << endl;
     }
 
 }

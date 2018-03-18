@@ -15,7 +15,8 @@ struct GC_Backtracking : GC {
 private:
     Duration duration;
     bool _verbose = false;
-    
+    Count iterations_;
+
 public:
     // duration in seconds!!!
     GC_Backtracking(const Duration& duration) : duration(duration) {}
@@ -26,7 +27,11 @@ public:
     void setVerbose(bool b) {
         _verbose = b;
     }
-    
+
+    Count iterations() const {
+        return iterations_;
+    }
+
     ColoredGraph solve(const Graph& gr) {
         ColoredGraph result(gr);
         ColoredGraph c_gr(gr);
@@ -45,6 +50,7 @@ public:
         // choose next node, color it, repeat
         // also we keeping stack of our travelling
         // so we could bypass full solution space 
+        iterations_ = 0;
         while (true) {
             if (c_gr.uncoloredNodeCount() == 0) {
                 result = c_gr;
@@ -55,7 +61,7 @@ public:
                 i = chooseNextUncoloredNode(c_gr);
                 // that node probably will have many possible colors
                 // so we will write it into our stack 
-                vector<Color> colors = sortedNodePossibleColors(c_gr, i, result.colorCount()-1);
+                auto& colors = sortedNodePossibleColors(c_gr, i, result.colorCount()-1);
                 if (colors.size() > 0) {  
                     nodeOrder.push(i);
                     for (Color c : colors) {
@@ -76,6 +82,7 @@ public:
                 nodeOrder.pop();
             }
             c_gr.setColor_2(i, c);
+            ++iterations_;
         }
         return result;
     }
@@ -102,17 +109,34 @@ private:
         });
     }
     
-    vector<Color> sortedNodePossibleColors(const ColoredGraph& c_gr, Node i, size_t maxColorCount) {
-        set<Color> adjColors = c_gr.adjacentColors(i);
-        set<Color> colors = c_gr.colors();
-        // if maxColorCount not reached every time possible color may be new color
-        if (maxColorCount > colors.size()) {
-            colors.insert(colors.size() > 0 ? *colors.rbegin() + 1 : 0);  
-        } 
-        for (Color c : adjColors) {
-            colors.erase(c);
+    const vector<Color>& sortedNodePossibleColors(const ColoredGraph& c_gr, Node i, size_t maxColorCount) {
+        auto& adjColors = c_gr.adjacentColors(i);
+        auto& colors = c_gr.colors();
+
+        static vector<Color> result;
+        result.clear();
+
+        if (colors.empty()) {
+            if (maxColorCount > 0) {
+                result.push_back(0);
+
+            }
+            return result;
         }
-        vector<Color> result(colors.begin(), colors.end());
+
+        auto maxColor = *max_element(colors.begin(), colors.end());
+
+        static vector<bool> availableColors;
+        availableColors.resize(maxColor+1);
+        fill(availableColors.begin(), availableColors.end(), true);
+
+        for (auto i : adjColors) availableColors[i] = false;
+        for (auto i : colors) if (availableColors[i]) result.push_back(i);
+
+        if (maxColorCount > colors.size()) {
+            result.push_back(maxColor+1);
+        }
+
         return result;
     }
 };

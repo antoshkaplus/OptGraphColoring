@@ -14,63 +14,47 @@
 class ColoredGraph : public Graph {
 private:
 
-    // node => color
-    vector<Color>               _coloring;
+    using CountIndex = ant::CountIndex<false, Color, Color>;
+
+    Coloring                    coloring;
     // support data structure
     // node, color => number of adjacent nodes with that color 
-    vector<ant::CountMap<Color>> _adjacentNodesOfColorCount;
+    vector<CountIndex>          _adjacentNodesOfColorCount;
     // how many nodes with the particular color
-    ant::CountMap<Color>         _nodeCountOfColor;
-    // nodes that are uncolored
-    set<Node>                   _uncoloredNodes;
+    CountIndex                  _nodeCountOfColor;
 
 public:
     ColoredGraph() {}
-    ColoredGraph(const Graph& gr) : Graph(gr) {
-        _coloring.resize(nodeCount(), COLOR_NONE);
+    ColoredGraph(const Graph& gr) : Graph(gr), coloring(gr.nodeCount()) {
+
         _adjacentNodesOfColorCount.resize(nodeCount());
-        // _nodeCountOfColor nothing i can initialize
-        for (int i = 0; i < nodeCount(); i++) {
-            _uncoloredNodes.insert(i);
-        }
     }
 
     ColoredGraph(const Graph& gr, const vector<Color>& coloring)
-        : Graph(gr),
-          _coloring(coloring) {
+        : Graph(gr), coloring(coloring) {
         
         _adjacentNodesOfColorCount.resize(nodeCount());
         for (Node i = 0; i < nodeCount(); i++) {
             if (color(i) == COLOR_NONE) {
-                _uncoloredNodes.insert(i);
                 continue;
             }
             
             for (Node j : nextNodes(i)) {
-                _adjacentNodesOfColorCount[j].increase(color(i));
+                _adjacentNodesOfColorCount[j].Increase(color(i));
             }
-            _nodeCountOfColor.increase(color(i));
+            _nodeCountOfColor.Increase(color(i));
         }
     }
     
-    ColoredGraph& operator=(const ColoredGraph& c_gr) {
-        _coloring                   = c_gr._coloring;
-        _adjacentNodesOfColorCount  = c_gr._adjacentNodesOfColorCount;
-        _nodeCountOfColor           = c_gr._nodeCountOfColor;
-        _uncoloredNodes             = c_gr._uncoloredNodes;
-        return *this;
-    }
-    
     size_t adjacentNodesOfColorCount(Node i, Color c) const {
-        auto it = _adjacentNodesOfColorCount[i].find(c);
-        return it == _adjacentNodesOfColorCount[i].end() ? 0 : it->second;
+        return _adjacentNodesOfColorCount[i][c];
     } 
 
-    set<Color> adjacentColors(Node i) const {
+    const vector<Color>& adjacentColors(Node i) const {
         return _adjacentNodesOfColorCount[i].keys();
     }
     
-    const map<Color, Count>& adjacentNodesOfColorCount(Node i) {
+    const CountIndex& adjacentNodesOfColorCount(Node i) {
         return _adjacentNodesOfColorCount[i];
     }
     
@@ -79,15 +63,15 @@ public:
     }
     
     
-    set<Color> colors() const {
+    const vector<Color> colors() const {
         return _nodeCountOfColor.keys();
     }
     
     size_t nodeCountOfColor(Color c) const {
-        return _nodeCountOfColor.get(c);
+        return _nodeCountOfColor[c];
     }
     
-    const ant::CountMap<Color>& nodeCountOfColor() const {
+    const CountIndex& nodeCountOfColor() const {
         return _nodeCountOfColor;
     }
     
@@ -102,29 +86,25 @@ public:
     size_t adjacentUncoloredNodeCount(Node i) const {
         size_t count = 0;
         for (Node j : nextNodes(i)) {
-            if (_uncoloredNodes.count(j)) count++;
+            if (isColored(j) == false) count++;
         }
         return count;
     }
     
     Color color(Node i) const {
-        return _coloring[i];
+        return coloring.color(i);
     }
-    
-    const vector<Color>& coloring() const {
-        return _coloring;
-    } 
-    
+
     size_t uncoloredNodeCount() const {
-        return _uncoloredNodes.size();
+        return coloring.uncoloredNodes().size();
     }
     
-    const set<int>& uncoloredNodes() const {
-        return _uncoloredNodes;
+    const vector<Node>& uncoloredNodes() const {
+        return coloring.uncoloredNodes();
     }
   
     bool isColored(Node i) const {
-        return _coloring[i] != COLOR_NONE;
+        return coloring[i] != COLOR_NONE;
     }
   
     // i: index of node, which should be without color
@@ -132,11 +112,10 @@ public:
         int c = color(i);
         assert(c != -1); // unsetting uncolored node!
         for (int j : nextNodes(i)) {
-            _adjacentNodesOfColorCount[j].decrease(c);
+            _adjacentNodesOfColorCount[j].Decrease(c);
         }
-        _nodeCountOfColor.decrease(c);
-        _coloring[i] = -1;
-        _uncoloredNodes.insert(i);
+        _nodeCountOfColor.Decrease(c);
+        coloring.reset(i);
     }
   
     void setColor_2(int i, int c) {
@@ -149,11 +128,10 @@ public:
     void setColor(int i, int c) {
         assert(color(i) == -1); // setting color of colored node!;
         for (int j : nextNodes(i)) {
-            _adjacentNodesOfColorCount[j].increase(c);
+            _adjacentNodesOfColorCount[j].Increase(c);
         }
-        _nodeCountOfColor.increase(c);
-        _coloring[i] = c;
-        _uncoloredNodes.erase(i);
+        _nodeCountOfColor.Increase(c);
+        coloring.set(i, c);
     }
     
     void setColor(Node i) {
@@ -171,9 +149,8 @@ public:
         int cMain = color(i);
         if (cMain == -1) cout << "resetting color of uncolored node!\n";
         unsetColor(i);
-        for (auto& p : _nodeCountOfColor) {
-            Color c = p.first;
-            if (_adjacentNodesOfColorCount[i].count(c) && c != cMain) {
+        for (auto& c : _nodeCountOfColor.keys()) {
+            if (_adjacentNodesOfColorCount[i][c] && c != cMain) {
                 setColor(i, c);
                 break;
             }

@@ -26,7 +26,17 @@ backtracking (10 sec):
 100_5 : 16
 100_7 : 24
 
+after optimization:
+100_3 : 10 iterations: 7146002
+100_5 : 16 iterations: 6051317
+100_7 : 24 iterations: 5441563
+
+before optimization
+
+
 naive_2:
 100_3 : 14
 100_5 : 23
 100_7 : 29
+
+

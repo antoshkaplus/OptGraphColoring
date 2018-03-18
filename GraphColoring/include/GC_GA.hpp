@@ -31,7 +31,7 @@ private:
     double mutation_frequency = 0.7;
     
 public:
-    string name() {
+    string name() override {
         return "ga";
     }
 
@@ -65,7 +65,10 @@ public:
         ColoredGraph c_gr = naive.solve(gr); 
         Count color_count = c_gr.colorCount();
         int node_count = gr.nodeCount();
-        Coloring coloring = c_gr.coloring();
+        Coloring coloring(node_count);
+        for (auto i = 0; i < node_count; ++i) {
+            coloring[i] = c_gr.color(i);
+        }
         
         // has time
         while (true) {
@@ -156,8 +159,8 @@ private:
         auto& colors = adjacent_colors_buffer_;
         vector<Index> inds(edges_.size());
         iota(inds.begin(), inds.end(), 0);
-        
-        random_shuffle(inds.begin(), inds.end());
+
+        shuffle(inds.begin(), inds.end(), rng_);
         
         //for (auto e : edges_) {
         bool changed = false;
