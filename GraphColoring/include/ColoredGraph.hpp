@@ -133,7 +133,8 @@ public:
         _nodeCountOfColor.Increase(c);
         coloring.set(i, c);
     }
-    
+
+    // set any available color to node
     void setColor(Node i) {
         assert(adjacentColorCount(i) < colorCount());
         for (Color c : colors()) {
@@ -162,13 +163,16 @@ public:
         unsetColor(i);
         setColor(i, c);
     }
-    
+
     // don't use with uncolored nodes
     // colored graph should be feasible for color of node i0 and color 
     void kempeChainSwap(Node i0, Color c1) {
         assert(color(i0) != COLOR_NONE && c1 != -1);
-        unordered_set<Node> recoloredNodes;
-        stack<Node> nodesToHandle;
+        static vector<bool> recoloredNodes;
+        recoloredNodes.clear();
+        recoloredNodes.resize(nodeCount(), false);
+
+        static stack<Node> nodesToHandle;
         Color c0 = color(i0);
         nodesToHandle.push(i0);
         while (!nodesToHandle.empty()) {
@@ -177,11 +181,11 @@ public:
             // future color for this node
             Color c = color(i) == c0 ? c1 : c0;
             resetColor(i, c);
-            recoloredNodes.insert(i);
+            recoloredNodes[i] = true;
             for (Node j : nextNodes(i)) {
-                if (color(j) == c && recoloredNodes.count(j) == 0) {
+                if (color(j) == c && !recoloredNodes[j]) {
                     nodesToHandle.push(j);
-                } 
+                }
             }
         }
     }

@@ -7,7 +7,7 @@ project(GraphColoring)
 set(CMAKE_CXX_FLAGS "-std=c++17 -Wno-sign-compare")
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -Wall -g")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -Wall -O3 -march=native")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -Wall -O3 -march=native -DNDEBUG")
 
 set(BinDir "../bin")
 set(LibDir "../lib")

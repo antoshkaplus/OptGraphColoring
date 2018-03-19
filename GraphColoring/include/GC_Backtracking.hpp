@@ -95,8 +95,8 @@ private:
     // taking node with maximum adjacent colors (pruning possible colors to try)
     // if have same amount of adjacent colors take one with greater uncolored node count
     Node chooseNextUncoloredNode(const ColoredGraph& c_gr) {
-        auto *s = &c_gr.uncoloredNodes();
-        return *max_element(s->begin(), s->end(), [&c_gr](Node i_1, Node i_2) {
+        auto& s = c_gr.uncoloredNodes();
+        return *max_element(s.begin(), s.end(), [&c_gr](Node i_1, Node i_2) {
             size_t n_1 = c_gr.adjacentColorCount(i_1),
                    n_2 = c_gr.adjacentColorCount(i_2);
             if (n_1 < n_2) return true;

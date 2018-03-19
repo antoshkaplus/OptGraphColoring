@@ -32,7 +32,9 @@ after optimization:
 100_7 : 24 iterations: 5441563
 
 before optimization
-
+100_3 : 10 iterations: 639689
+100_5 : 16 iterations: 433649
+100_7 : 25 iterations: 399532
 
 naive_2:
 100_3 : 14
