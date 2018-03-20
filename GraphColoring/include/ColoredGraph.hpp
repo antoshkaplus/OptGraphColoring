@@ -135,14 +135,15 @@ public:
     }
 
     // set any available color to node
-    void setColor(Node i) {
+    bool setColor(Node i) {
         assert(adjacentColorCount(i) < colorCount());
         for (Color c : colors()) {
             if (adjacentNodesOfColorCount(i, c) == 0) {
                 setColor(i, c);
-                break;
+                return true;
             }
         }
+        return false;
     }
 
     // sets another first possible color for a node

@@ -16,7 +16,7 @@ struct GC {
 void compareMethods(vector<unique_ptr<GC>>& methods) {
     Count node_count = 100;
     for (auto c = 0.5; c <= 0.6; c += 0.1) {
-        Graph gr = graph::BuildRandom<false, int16_t>(node_count, c);
+        Graph gr = graph::BuildRandom<graph::GraphBuilder<false, int16_t>>(node_count, c);
         for (auto& m : methods) {
             clock_t start = clock();
             int color_count = m->solve(gr).colorCount();
