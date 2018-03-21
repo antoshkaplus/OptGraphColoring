@@ -190,6 +190,53 @@ public:
             }
         }
     }
+
+    void makeKempeChain(Node i, Color c, IndexSet set, IndexSet set_2, vector<bool> prohibited) {
+
+    }
+
+    bool setColorKempeChain(Node i) {
+        unordered_map<Color, vector<Node>> colorNodes;
+        for (auto j : nextNodes(i)) {
+            colorNodes[color(j)].push_back(j);
+        }
+
+        // pick color with less nodes inside inner loop???
+        vector<bool> prohibited(nodeCount());
+        for (auto it = colorNodes.begin(); it != colorNodes.end(); ++it) {
+            auto c = it->first;
+            fill(prohibited.begin(), prohibited.end(), false);
+            for (auto j : it->second) {
+                prohibited[j] = true;
+            }
+
+
+
+            for (auto it_2 = it+1; it_2 != colorNodes.end(); ++it_2) {
+
+                bool earlyExit = false;
+
+                auto c_2 = it_2->first;
+                for (auto j : it_2->second) {
+                    // v and v_2 come back
+                    earlyExit = makeKempeChain(j, c, v_2, v, prohibited);
+
+                    if (earlyExit) break;
+                }
+
+                if (!earlyExit) {
+                    // c_2 color is good to kempe chain with c or vice verse
+
+                    // set color of vertices: v_2 -> c
+                    // v -> c_2
+
+                    setColor(i, c_2);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 };
 
 
