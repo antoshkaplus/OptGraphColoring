@@ -22,3 +22,15 @@ target_compile_definitions(gc_naive PUBLIC -DNAIVE)
 add_executable(gc_backtrack app/methods.cpp)
 target_link_libraries(gc_backtrack ant)
 target_compile_definitions(gc_backtrack PUBLIC -DBACKTRACK)
+
+add_executable(gc_hill_climbing app/methods.cpp)
+target_link_libraries(gc_hill_climbing ant)
+target_compile_definitions(gc_hill_climbing PUBLIC -DHILL_CLIMBING)
+
+add_executable(gc_ga app/methods.cpp)
+target_link_libraries(gc_ga ant)
+target_compile_definitions(gc_ga PUBLIC -DGA)
+
+add_executable(gc_rec_large_first app/methods.cpp)
+target_link_libraries(gc_rec_large_first ant)
+target_compile_definitions(gc_rec_large_first PUBLIC -DREC_LARGE_FIRST)

@@ -76,3 +76,49 @@ struct GC_Naive_2 : GC {
         return "naive_2";
     }
 };
+
+struct GC_RecursiveLargestFirst : GC {
+    ColoredGraph solve(const Graph& gr) {
+        ColoredGraph c_gr(gr);
+
+        Color currentColor = 0;
+        auto i = MaxElement(c_gr.uncoloredNodes().begin(), c_gr.uncoloredNodes().end(), [&](auto n) {
+            return c_gr.adjacentUncoloredNodeCount(n);
+        });
+        c_gr.setColor(*i, currentColor);
+
+        while (c_gr.uncoloredNodeCount() > 0) {
+
+            auto next = c_gr.uncoloredNodes()[0];
+            auto nextDegree = 0;
+            for (auto i : c_gr.uncoloredNodes()) {
+                if (c_gr.adjacentNodesOfColorCount(i, currentColor) > 0) continue;
+
+                auto degree = 0;
+                for (auto j : c_gr.nextNodes(i)) {
+                    degree += (c_gr.adjacentNodesOfColorCount(j, currentColor) > 0) ? 1 : 0;
+                }
+                if (degree > nextDegree) {
+                    next = i;
+                    nextDegree = degree;
+                }
+            }
+            if (nextDegree > 0) {
+                c_gr.setColor(next, currentColor);
+            } else {
+
+                ++currentColor;
+                auto i = MaxElement(c_gr.uncoloredNodes().begin(), c_gr.uncoloredNodes().end(), [&](auto n) {
+                    return c_gr.adjacentUncoloredNodeCount(n);
+                });
+                c_gr.setColor(*i, currentColor);
+
+            }
+        }
+        return c_gr;
+    }
+
+    string name() {
+        return "RecursiveLargestFirst";
+    }
+};

@@ -136,7 +136,8 @@ public:
 
     // set any available color to node
     bool setColor(Node i) {
-        assert(adjacentColorCount(i) < colorCount());
+        if (adjacentColorCount(i) == colorCount()) return false;
+
         for (Color c : colors()) {
             if (adjacentNodesOfColorCount(i, c) == 0) {
                 setColor(i, c);
@@ -164,84 +165,12 @@ public:
         unsetColor(i);
         setColor(i, c);
     }
-
-    // don't use with uncolored nodes
-    // colored graph should be feasible for color of node i0 and color 
-    void kempeChainSwap(Node i0, Color c1) {
-        assert(color(i0) != COLOR_NONE && c1 != -1);
-        static vector<bool> recoloredNodes;
-        recoloredNodes.clear();
-        recoloredNodes.resize(nodeCount(), false);
-
-        static stack<Node> nodesToHandle;
-        Color c0 = color(i0);
-        nodesToHandle.push(i0);
-        while (!nodesToHandle.empty()) {
-            Node i = nodesToHandle.top();
-            nodesToHandle.pop();
-            // future color for this node
-            Color c = color(i) == c0 ? c1 : c0;
-            resetColor(i, c);
-            recoloredNodes[i] = true;
-            for (Node j : nextNodes(i)) {
-                if (color(j) == c && !recoloredNodes[j]) {
-                    nodesToHandle.push(j);
-                }
-            }
-        }
-    }
-
-    void makeKempeChain(Node i, Color c, IndexSet set, IndexSet set_2, vector<bool> prohibited) {
-
-    }
-
-    bool setColorKempeChain(Node i) {
-        unordered_map<Color, vector<Node>> colorNodes;
-        for (auto j : nextNodes(i)) {
-            colorNodes[color(j)].push_back(j);
-        }
-
-        // pick color with less nodes inside inner loop???
-        vector<bool> prohibited(nodeCount());
-        for (auto it = colorNodes.begin(); it != colorNodes.end(); ++it) {
-            auto c = it->first;
-            fill(prohibited.begin(), prohibited.end(), false);
-            for (auto j : it->second) {
-                prohibited[j] = true;
-            }
-
-
-
-            for (auto it_2 = it+1; it_2 != colorNodes.end(); ++it_2) {
-
-                bool earlyExit = false;
-
-                auto c_2 = it_2->first;
-                for (auto j : it_2->second) {
-                    // v and v_2 come back
-                    earlyExit = makeKempeChain(j, c, v_2, v, prohibited);
-
-                    if (earlyExit) break;
-                }
-
-                if (!earlyExit) {
-                    // c_2 color is good to kempe chain with c or vice verse
-
-                    // set color of vertices: v_2 -> c
-                    // v -> c_2
-
-                    setColor(i, c_2);
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
 };
 
 
 bool isFeasibleColoring(const ColoredGraph& c_gr) {
-    if (c_gr.uncoloredNodeCount() > 0) return false;
+    if (c_gr.uncoloredNodeCount() > 0)
+        return false;
     for (Node i = 0; i < c_gr.nodeCount(); i++) {
         if (c_gr.adjacentNodesOfColorCount(i, c_gr.color(i)) > 0) return false;
     }

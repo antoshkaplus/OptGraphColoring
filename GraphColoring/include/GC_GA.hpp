@@ -95,7 +95,7 @@ public:
                 swap(p_0, p_1);
                 swap(v_0, v_1);
             }
-            
+
             if (best_fitness != 0) {
                 break;
             }
