@@ -1,5 +1,7 @@
 
 #include "GC_Backtracking.hpp"
+#include "GC_TabuSearch.hpp"
+#include "GC_Tabucol.hpp"
 #include "GC_HillClimbing.hpp"
 #include "GC_GA.hpp"
 
@@ -26,12 +28,23 @@ int main(int argc, const char * argv[]) {
 #ifdef GA
 
         GC_GA solver;
-        solver.set_max_iteration_count(100000);
+        solver.set_max_iteration_count(10000);
 
 #endif
 #ifdef REC_LARGE_FIRST
 
         GC_RecursiveLargestFirst solver;
+
+#endif
+#ifdef TS
+
+        GC_TabuSearch solver;
+        solver.setMaxIteration(1000000);
+
+#endif
+#ifdef TABUCOL
+
+        GC_Tabucol solver;
 
 #endif
 

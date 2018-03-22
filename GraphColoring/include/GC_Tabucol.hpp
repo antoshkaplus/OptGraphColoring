@@ -1,14 +1,14 @@
 #pragma once
 
-// 
-// algorithm by A.Hertz and D. de Werra
-// reference: Using tabu search techniques for graph coloring
-//
-
 #include "ant/optimization/optimization.h"
 
 #include "GC.hpp"
 
+
+//
+// algorithm by A.Hertz and D. de Werra
+// reference: Using tabu search techniques for graph coloring
+//
 struct GC_Tabucol : GC {
     
 private:
@@ -25,7 +25,9 @@ private:
     
     const Graph* graph_;
     ant::opt::TabuList<size_t> tabu_list_;
-    
+
+    Count noImprovementIters = 150000;
+
 public:
     string name() {
         return "tabucol";
@@ -51,10 +53,8 @@ public:
                 result = c_gr;
                 Color minColor = -1;
                 Count minCount = -1;
-                Color color;
-                Count count;
-                for (auto& p : c_gr.nodeCountOfColor()) {
-                    tie(color, count) = p;
+                for (auto color : c_gr.nodeCountOfColor().keys()) {
+                    auto count = c_gr.nodeCountOfColor()[color];
                     if (minCount == -1 || count < minCount) {
                         minCount = count;
                         minColor = color;
@@ -115,17 +115,20 @@ public:
         return result;
     }
     
-    
+    void setNoImprovementIters(Count value) {
+        noImprovementIters = value;
+    }
+
 private:
     
     void recolorNode(Node n, ColoredGraph* c_gr) {
         // take color with minimum conflits and that's not tabu
         Color minColor = -1;
         Count minCount;
-        Color color;
-        Count count;
-        for (auto& p : c_gr->adjacentNodesOfColorCount(n)) {
-            tie(color, count) = p;
+
+        auto& adj = c_gr->adjacentNodesOfColorCount(n);
+        for (auto& color : adj.keys()) {
+            auto count = adj[color];
             if (color == c_gr->color(n) || tabu_list_.hasInside(key(n, color), current_iteration_)) continue;
             if (minColor == -1 || count < minCount) {
                 minColor = color;
@@ -146,13 +149,13 @@ private:
         uniform_int_distribution<> distr(0, c_gr->colorCount()-1);
         while (true) {
             Index i = distr(rng_);
-            for (auto& p : c_gr->nodeCountOfColor()) {
+            for (auto& color : c_gr->nodeCountOfColor().keys()) {
                 if (i-- != 0) continue;
-                if (p.first == c_gr->color(n) || tabu_list_.hasInside(key(n, p.first), current_iteration_)) {
+                if (color == c_gr->color(n) || tabu_list_.hasInside(key(n, color), current_iteration_)) {
                     break;
                 }
                 tabu_list_.insert(key(n, c_gr->color(n)), tenure(), current_iteration_);
-                Color c = p.first;
+                Color c = color;
                 c_gr->setColor_2(n, c);
                 for (auto nn : c_gr->nextNodes(n)) {
                     if (c_gr->color(nn) == c) conflicting_nodes_.insert(nn);
@@ -230,12 +233,15 @@ private:
 
     void changeColorToAdjacent(Node n, ColoredGraph* c_gr) {
         ColorCount min{-1, 1};
-        for (auto p : c_gr->adjacentNodesOfColorCount(n)) {
-            if (p.first == c_gr->color(n)) {
+
+        auto& adj = c_gr->adjacentNodesOfColorCount(n);
+        for (auto color : adj.keys()) {
+            auto count = adj[color];
+            if (color == c_gr->color(n)) {
                 continue;
             }
-            if (min.color == -1 || min.count > p.second) {
-                min = {p.first, p.second};
+            if (min.color == -1 || min.count > count) {
+                min = {color, count};
             }
         }
         assert(min.color != -1);

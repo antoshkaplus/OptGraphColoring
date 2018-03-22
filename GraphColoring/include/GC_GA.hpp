@@ -6,6 +6,10 @@
 
 #include "GC.hpp"
 
+
+// Method can be found
+// Genetic Algorithm Applied to the Graph Coloring Problem
+// Musa M. Hindi and Roman V. Yampolskiy
 struct GC_GA : GC {
 private:    
     using Population = vector<vector<Color>>;

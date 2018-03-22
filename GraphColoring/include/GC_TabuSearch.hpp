@@ -40,7 +40,8 @@ private:
     // uncolored nodes tatal degree that was achieved so far
     size_t minUncoloredNodesTotalDegree;
     bool _verbose = false;
-    
+    Index maxIteration = 100000;
+
 public:
     ColoredGraph solve(const Graph& gr) {
         // how many iterations can't swap colors
@@ -48,7 +49,7 @@ public:
         tabuList.tenure = 10;
 
         ColoredGraph result(gr);
-        GC_Naive naive;
+        GC_Naive_2 naive;
         ColoredGraph c_gr(naive.solve(gr));
         this->c_gr = &c_gr;
 
@@ -63,7 +64,7 @@ public:
             currentIteration = 0;
             minUncoloredNodesTotalDegree = uncoloredNodesTotalDegree();
             while (c_gr.uncoloredNodeCount() > 0 &&
-                   currentIteration < 100000) {
+                   currentIteration < maxIteration) {
                 // choosing neighborhood
                 Node i = randomUncoloredNode();
                 localSearch(i);
@@ -82,6 +83,14 @@ public:
         return result;
     }
 
+    string name() override {
+        return "TabuSearch";
+    }
+
+    void setMaxIteration(Count iteration) {
+        maxIteration = iteration;
+    }
+
     bool isVerbose() {
         return _verbose;
     }
@@ -90,16 +99,15 @@ public:
     }
 
     Node randomUncoloredNode() {
-        set<Node> s = c_gr->uncoloredNodes();
-        NodeDistribution d(0, (Node)s.size()-1);
-        return vector<Node>(s.begin(), s.end())[d(rng)];
+        NodeDistribution d(0, (Node)c_gr->uncoloredNodeCount()-1);
+        return c_gr->uncoloredNodes() [d(rng)];
     }
 
     bool reduceUncoloredNodeCount() {
         ColoredGraph& c_gr = *this->c_gr;
         bool didReduce = false;
-        const set<Node> &s = c_gr.uncoloredNodes();
-        for (Node i : vector<Node>(s.begin(), s.end())) {
+        auto uncolored = c_gr.uncoloredNodes();
+        for (Node i : uncolored) {
             if (c_gr.adjacentColorCount(i) < c_gr.colorCount()) {
                 c_gr.setColor(i);
                 didReduce = true;

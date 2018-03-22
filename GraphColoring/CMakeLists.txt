@@ -34,3 +34,11 @@ target_compile_definitions(gc_ga PUBLIC -DGA)
 add_executable(gc_rec_large_first app/methods.cpp)
 target_link_libraries(gc_rec_large_first ant)
 target_compile_definitions(gc_rec_large_first PUBLIC -DREC_LARGE_FIRST)
+
+add_executable(gc_ts app/methods.cpp)
+target_link_libraries(gc_ts ant)
+target_compile_definitions(gc_ts PUBLIC -DTS)
+
+add_executable(gc_tabucol app/methods.cpp)
+target_link_libraries(gc_tabucol ant)
+target_compile_definitions(gc_tabucol PUBLIC -DTABUCOL)
