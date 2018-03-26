@@ -43,7 +43,7 @@ private:
     Index maxIteration = 100000;
 
 public:
-    ColoredGraph solve(const Graph& gr) {
+    ColoredGraph solve(const Graph& gr) override {
         // how many iterations can't swap colors
         // trying out value of 10
         tabuList.tenure = 10;

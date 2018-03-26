@@ -3,7 +3,9 @@
 #include "GC_TabuSearch.hpp"
 #include "GC_Tabucol.hpp"
 #include "GC_HillClimbing.hpp"
+#include "GC_KempeChain.hpp"
 #include "GC_GA.hpp"
+#include "GC_LP.hpp"
 
 
 int main(int argc, const char * argv[]) {
@@ -45,6 +47,16 @@ int main(int argc, const char * argv[]) {
 #ifdef TABUCOL
 
         GC_Tabucol solver;
+
+#endif
+#ifdef KEMPE_CHAIN
+
+        GC_KempeChain solver;
+
+#endif
+#ifdef LP
+
+        GC_LP solver(GC_LP_Rules::PerEdge);
 
 #endif
 

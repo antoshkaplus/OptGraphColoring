@@ -12,6 +12,9 @@ target_link_libraries(GraphColoring_Solver
 add_executable(GC_BM app/benchmark.cpp)
 target_link_libraries(GC_BM benchmark pthread)
 
+add_executable(GC_LP app/lp.cpp)
+target_link_libraries(GC_LP ant ${COIN_LIBS})
+target_compile_definitions(GC_LP PUBLIC -DLP)
 
 # methods
 
@@ -42,3 +45,11 @@ target_compile_definitions(gc_ts PUBLIC -DTS)
 add_executable(gc_tabucol app/methods.cpp)
 target_link_libraries(gc_tabucol ant)
 target_compile_definitions(gc_tabucol PUBLIC -DTABUCOL)
+
+add_executable(gc_kempe_chain app/methods.cpp)
+target_link_libraries(gc_kempe_chain ant)
+target_compile_definitions(gc_kempe_chain PUBLIC -DKEMPE_CHAIN)
+
+add_executable(gc_lp app/methods.cpp)
+target_link_libraries(gc_lp ant ${COIN_LIBS})
+target_compile_definitions(gc_lp PUBLIC -DLP)

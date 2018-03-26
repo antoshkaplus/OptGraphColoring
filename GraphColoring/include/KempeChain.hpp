@@ -5,7 +5,7 @@
 
 class KempeChain {
 
-    const ColoredGraph& c_gr;
+    ColoredGraph& c_gr;
     vector<Node> nodeSwapSet_;
     vector<Node> colorSwapSet_;
 
@@ -18,6 +18,14 @@ public:
     void resetSwapSets() {
         nodeSwapSet_.clear();
         colorSwapSet_.clear();
+    }
+
+    bool Make(Node i_1, Color c_2) {
+        static vector<bool> prohibited;
+        prohibited.resize(c_gr.nodeCount());
+        fill(prohibited.begin(), prohibited.end(), false);
+
+        return Make(i_1, c_2, prohibited);
     }
 
     bool Make(Node i_1, Color c_2, const vector<bool>& prohibited) {
@@ -91,8 +99,8 @@ bool SetColorUsingKempeChain(ColoredGraph& c_gr, Node i) {
             }
 
             if (success) {
-                for (auto j : kempeChain.nodeSwapSet()) c_gr.resetColor(j, c_1);
-                for (auto j : kempeChain.colorSwapSet()) c_gr.resetColor(j, c_2);
+                ResetColor(c_gr, kempeChain.nodeSwapSet(), c_1);
+                ResetColor(c_gr, kempeChain.colorSwapSet(), c_2);
 
                 for (auto i = 0; i < c_gr.nodeCount(); ++i)
                     if (c_gr.isColored(i))
@@ -105,3 +113,4 @@ bool SetColorUsingKempeChain(ColoredGraph& c_gr, Node i) {
     }
     return false;
 }
+

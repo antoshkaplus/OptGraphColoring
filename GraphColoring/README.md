@@ -1,13 +1,8 @@
-# Opt_GraphColoring
+# GraphColoring
 
-## Story:
+Here we can work in feasible and infeasible solution spaces. Infeasible solution space includes notion of uncolored node or color violations.
 
-While studying on coursera online course "Discrete Optimization" with Professor Pascal Van Hentenryck we implemented solved many different general constrained optimization problems. On of them, most simple was Graph Coloring.
-
-## Results:
-
-## Todo:
-
-- [ ] when graph is dense try to consider reverse graph. some sets. minimum bounds
-- [ ] make more optimized graph structures. look something with feasible tabu search
-- [ ] don’t look on colored graph pointing out uncolored nodes.
+Relaxation of the problem also gives us new objective functions:
+* reduce amount of uncolored nodes
+* reduce some of the color classes to zero while expanding others
+* reduce amount of violations

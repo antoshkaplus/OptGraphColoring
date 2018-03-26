@@ -176,3 +176,10 @@ bool isFeasibleColoring(const ColoredGraph& c_gr) {
     }
     return true;
 }
+
+
+void ResetColor(ColoredGraph& c_gr, const vector<Node>& nodes, Color c) {
+    for (auto n : nodes) {
+        c_gr.resetColor(n, c);
+    }
+}
