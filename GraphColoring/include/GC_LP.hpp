@@ -89,6 +89,8 @@ public:
     }
 };
 
+
+
 class GC_LP_EventHandler : public CbcEventHandler {
 
     string recoveryPath;
@@ -135,12 +137,14 @@ class GC_LP : public GC {
     GC_LP_Rules rules;
     string recoveryPath;
     double max_seconds {0};
+    bool use_heuristic = true;
+    bool use_parallel = true;
 
 public:
     GC_LP(GC_LP_Rules rules)
         : rules(rules)  {}
 
-    // nothing to inherit form GC really
+    // nothing to inherit from GC really
     ColoredGraph solve(const Graph& gr) override {
 
         CoinModel coinModel;
@@ -162,7 +166,9 @@ public:
             AddPerNodeRules(model, gr);
         }
 
-        model.setNumberThreads(std::thread::hardware_concurrency());
+        if (use_parallel) {
+            model.setNumberThreads(std::thread::hardware_concurrency());
+        }
 
         if (!recoveryPath.empty()) {
             model.passInEventHandler(make_unique<GC_LP_EventHandler>(recoveryPath).get());
@@ -191,6 +197,14 @@ public:
 
     void set_max_seconds(double seconds) {
         max_seconds = seconds;
+    }
+
+    void set_use_heuristic(bool value) {
+        use_heuristic = value;
+    }
+
+    void set_use_parallel(bool value) {
+        use_parallel = value;
     }
 
     void set_recovery_path(const string& str) {
