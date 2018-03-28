@@ -14,7 +14,10 @@ target_link_libraries(GC_BM benchmark pthread)
 
 add_executable(GC_LP app/lp.cpp)
 target_link_libraries(GC_LP ant ${COIN_LIBS})
-target_compile_definitions(GC_LP PUBLIC -DLP)
+
+add_executable(GC_LP_compare app/lp_compare.cpp)
+target_link_libraries(GC_LP_compare ant ${COIN_LIBS})
+
 
 # methods
 

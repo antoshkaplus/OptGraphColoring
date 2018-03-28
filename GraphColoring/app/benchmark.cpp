@@ -8,7 +8,7 @@ template<class GC_Solver>
 void BM_GC(benchmark::State& state) {
     GC_Solver solver;
 
-    ifstream in(Format(std::string("data/gc_%d_%d"), state.range(0), state.range(1)));
+    ifstream in(Format("data/gc_%d_%d", state.range(0), state.range(1)));
     auto gr = ReadProblem(in);
     ColoredGraph c_gr;
     for (auto _ : state) {

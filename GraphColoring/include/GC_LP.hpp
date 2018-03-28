@@ -126,11 +126,16 @@ public:
 };
 
 
-
 enum class GC_LP_Rules {
     PerNode,
     PerEdge
 };
+
+inline const char* ToString(GC_LP_Rules rules) {
+    if (rules == GC_LP_Rules::PerNode) return "PerNode";
+    if (rules == GC_LP_Rules::PerEdge) return "PerEdge";
+    return "Unknown";
+}
 
 class GC_LP : public GC {
 
@@ -139,6 +144,9 @@ class GC_LP : public GC {
     double max_seconds {0};
     bool use_heuristic = true;
     bool use_parallel = true;
+
+    int iterations_passed_ {};
+    double seconds_passed_ {};
 
 public:
     GC_LP(GC_LP_Rules rules)
@@ -181,6 +189,9 @@ public:
         if (model.maximumSecondsReached()) Println(cout, "max seconds reached");
         if (model.isSecondsLimitReached()) Println(cout, "seconds limit reached");
 
+        seconds_passed_ = model.getCurrentSeconds();
+        iterations_passed_ = model.getIterationCount();
+
         const double *solution = model.bestSolution();
 
         if (solution == nullptr) {
@@ -209,6 +220,14 @@ public:
 
     void set_recovery_path(const string& str) {
         recoveryPath = str;
+    }
+
+    double seconds_passed() const {
+        return seconds_passed_;
+    }
+
+    int iterations_passed() const {
+        return iterations_passed_;
     }
 
 private:
