@@ -10,6 +10,8 @@
 // Method can be found
 // Genetic Algorithm Applied to the Graph Coloring Problem
 // Musa M. Hindi and Roman V. Yampolskiy
+
+// Chromosome - coloring of the graph
 struct GC_GA : GC {
 private:    
     using Population = vector<vector<Color>>;
@@ -17,7 +19,6 @@ private:
     
     default_random_engine rng_{static_cast<unsigned>(chrono::system_clock::now().time_since_epoch().count())};
     
-    vector<Edge> edges_;
     const Graph* graph_;
     
     uniform_int_distribution<int> node_distr_;
@@ -59,10 +60,6 @@ public:
     ColoredGraph solve(const Graph& gr) override {
         node_distr_ = uniform_int_distribution<>(0, gr.nodeCount()-1);
         // always init edges first
-        edges_.clear();
-        graph::ForEachEdge(gr, [&](auto i, auto j) {
-            edges_.emplace_back(i, j);
-        });
         graph_ = &gr;
         
         GC_Naive_2 naive;
@@ -115,19 +112,18 @@ private:
 
     vector<int> countViolations(const Population& populaiton) {
         vector<int> vs(populaiton.size());
-        GC_GA& gc_ga = *this;
-        transform(populaiton.begin(), populaiton.end(), vs.begin(), 
-                  [&] (const Coloring& cs) { return gc_ga.countViolations(cs); });
+        transform(populaiton.begin(), populaiton.end(), vs.begin(),
+                  [this] (const Coloring& cs) { return countViolations(cs); });
         return vs;
     }
     
     int countViolations(const Coloring& coloring) {
         int violation_count = 0;
-        for (auto& e : edges_) {
-            if (coloring[e.first] == coloring[e.second]) {
+        graph::ForEachEdge(*graph_, [&](auto n_1, auto n_2) {
+            if (coloring[n_1] == coloring[n_2]) {
                 ++violation_count;
             }
-        }
+        });
         return violation_count;
     }
 
@@ -141,14 +137,14 @@ private:
     // passing as arguments to avoid allocating memory
     void nextGeneration_1(const Population& population, const vector<int>& violations,   
                           Population& next_population) {
-        auto fittest = [&] (int i_0, int i_1) {
-            return violations[i_0] < violations[i_1] ? i_0 : i_1;
+        auto cmp = [&] (int i_0, int i_1) {
+            return violations[i_0] < violations[i_1];
         };
         uniform_int_distribution<int> indices(0, population.size()-1);
         for (int i = 0; i < population.size(); ++i) {
-            
-            int p_1 = fittest(indices(rng_), indices(rng_));
-            int p_2 = fittest(indices(rng_), indices(rng_));
+            // pick fittest
+            int p_1 = min(indices(rng_), indices(rng_), cmp);
+            int p_2 = min(indices(rng_), indices(rng_), cmp);
             
             auto& child = next_population[i];
             crossover(child, population[p_1], population[p_2]);

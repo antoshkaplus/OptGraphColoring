@@ -3,17 +3,18 @@
 
 
 void CompareRules(string_view problem_name, const Graph& problem, ostream& out) {
-    for (auto rules : {GC_LP_Rules::PerEdge, GC_LP_Rules::PerNode}) {
-        GC_LP solver(rules);
+    for (auto use_heuristic : {true, false}) {
+        GC_LP solver;
         solver.set_max_seconds(1000);
+        solver.set_use_heuristic(use_heuristic);
 
         ant::Stopwatch stopwatch;
         auto c_gr = solver.solve(problem);
 
         Println(out, "problem: ", problem_name, ", colors: ", c_gr.colorCount());
         if (!isFeasibleColoring(c_gr)) Println(out, "result is not feasible coloring");
-        Println(out, "rules: ", ToString(rules), ", seconds: ", solver.seconds_passed(), ", iterations: ", solver.iterations_passed(),
-                ", my seconds", stopwatch.passed()/1000.);
+        Println(out, "heuristic: ", use_heuristic, ", seconds: ", solver.seconds_passed(), ", iterations: ", solver.iterations_passed(),
+                ", my seconds: ", stopwatch.passed()/1000.);
     }
 }
 
