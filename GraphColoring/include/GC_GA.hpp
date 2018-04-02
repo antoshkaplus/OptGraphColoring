@@ -10,6 +10,8 @@
 // Method can be found
 // Genetic Algorithm Applied to the Graph Coloring Problem
 // Musa M. Hindi and Roman V. Yampolskiy
+
+// Chromosome - coloring of the graph
 struct GC_GA : GC {
 private:
 

@@ -97,12 +97,12 @@ class GC_LP_EventHandler : public CbcEventHandler {
 
 public:
 
-    GC_LP_EventHandler(string recoveryPath) : recoveryPath(recoveryPath) {}
+    GC_LP_EventHandler(string recoveryPath = {}) : recoveryPath(recoveryPath) {}
     GC_LP_EventHandler(const GC_LP_EventHandler& handler)
         : CbcEventHandler(handler), recoveryPath(handler.recoveryPath) {}
 
     CbcAction event(CbcEvent whichEvent) {
-        if (whichEvent == CbcEvent::solution) {
+        if (whichEvent == CbcEvent::solution && !recoveryPath.empty()) {
             ofstream out(recoveryPath, std::ios::app);
             auto solution = model_->bestSolution();
             if (solution == nullptr) {
@@ -126,31 +126,18 @@ public:
 };
 
 
-enum class GC_LP_Rules {
-    PerNode,
-    PerEdge
-};
-
-inline const char* ToString(GC_LP_Rules rules) {
-    if (rules == GC_LP_Rules::PerNode) return "PerNode";
-    if (rules == GC_LP_Rules::PerEdge) return "PerEdge";
-    return "Unknown";
-}
 
 class GC_LP : public GC {
 
-    GC_LP_Rules rules;
     string recoveryPath;
     double max_seconds {0};
-    bool use_heuristic = true;
-    bool use_parallel = true;
+    bool use_heuristic = false;
+    bool use_parallel = false;
 
     int iterations_passed_ {};
     double seconds_passed_ {};
 
 public:
-    GC_LP(GC_LP_Rules rules)
-        : rules(rules)  {}
 
     // nothing to inherit from GC really
     ColoredGraph solve(const Graph& gr) override {
@@ -164,23 +151,19 @@ public:
 
         CbcModel model(solver);
         model.setLogLevel(0);
+        model.passInEventHandler(make_unique<GC_LP_EventHandler>(recoveryPath).get());
 
-        GC_LP_Heuristic heuristic;
-        model.addHeuristic(&heuristic);
-
-        if (rules == GC_LP_Rules::PerEdge) {
-            AddPerEdgeRules(model, gr);
-        } else {
-            AddPerNodeRules(model, gr);
+        if (use_heuristic) {
+            GC_LP_Heuristic heuristic;
+            model.addHeuristic(&heuristic);
         }
+
+        AddRules(model, gr);
 
         if (use_parallel) {
             model.setNumberThreads(std::thread::hardware_concurrency());
         }
 
-        if (!recoveryPath.empty()) {
-            model.passInEventHandler(make_unique<GC_LP_EventHandler>(recoveryPath).get());
-        }
         if (max_seconds != 0) model.setMaximumSeconds(max_seconds);
 
         model.initialSolve();
@@ -232,26 +215,7 @@ public:
 
 private:
 
-    void AddPerNodeRules(CbcModel& model, const Graph& gr) {
-        vector<CbcBranchAllDifferent*> objects;
-
-        for (auto i = 0; i < gr.nodeCount(); ++i) {
-            auto& next = gr.nextNodes(i);
-            vector<int> arr(next.begin(), next.end());
-            arr.push_back(i);
-
-            objects.push_back(new CbcBranchAllDifferent(&model, arr.size(), arr.data()));
-        }
-
-        model.addObjects(objects.size(), (CbcObject**)objects.data());
-
-        for (auto obj : objects) {
-            delete obj;
-        }
-        objects.clear();
-    }
-
-    void AddPerEdgeRules(CbcModel& model, const Graph& gr) {
+    void AddRules(CbcModel& model, const Graph& gr) {
         vector<CbcBranchAllDifferent*> objects;
 
         ForEachEdge(gr, [&](Node n_1, Node n_2) {
