@@ -11,10 +11,12 @@
 #include <algorithm>
 #include <fstream>
 #include <string>
+#include <experimental/memory_resource>
 
 #include <ant/graph/graph.hpp>
 #include <ant/graph/graph_util.hpp>
 #include <ant/core/count_index.hpp>
+
 
 using namespace ant;
 using namespace std;
@@ -29,7 +31,6 @@ using Degree        = Node;
 using Color         = Node;
 using NodeCount     = Node;
 using ColorCount    = Node;
-
 
 constexpr Color COLOR_NONE = -1;
 
@@ -107,3 +108,27 @@ public:
         return uncoloredNodes_;
     }
 };
+
+bool ResetColor(Node node, const Graph& graph, vector<Color>& coloring, ColorCount colorCount, default_random_engine& rng) {
+    std::vector<bool> colors;
+    colors.resize(colorCount);
+    std::fill(colors.begin(),
+              colors.end(),
+              false);
+
+    for (auto k : graph.nextNodes(node)) {
+        colors[coloring[k]] = true;
+    }
+
+    vector<Color> valid;
+    for (int c = 0; c < colors.size(); ++c) {
+        if (!colors[c]) {
+            valid.push_back(c);
+        }
+    }
+    if (valid.empty()) return false;
+
+    uniform_int_distribution<int> distr{0, static_cast<int>(valid.size())-1};
+    coloring[node] = valid[distr(rng)];
+    return true;
+}

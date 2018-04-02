@@ -11,6 +11,7 @@
 int main(int argc, const char * argv[]) {
 
     for (auto s : {"100_3", "100_5", "100_7"}) {
+//    for (auto s : {"500_3", "500_5", "500_7"}) {
 
 #ifdef NAIVE
 
@@ -30,7 +31,9 @@ int main(int argc, const char * argv[]) {
 #ifdef GA
 
         GC_GA solver;
-        solver.set_max_iteration_count(10000);
+//        GC_GA::Params params;
+
+//        solver.set_max_iteration_count(10000);
 
 #endif
 #ifdef REC_LARGE_FIRST
