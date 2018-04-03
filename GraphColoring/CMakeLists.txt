@@ -18,6 +18,8 @@ target_link_libraries(GC_LP ant ${COIN_LIBS})
 add_executable(GC_LP_compare app/lp_compare.cpp)
 target_link_libraries(GC_LP_compare ant ${COIN_LIBS})
 
+add_executable(GC_GA_compare app/ga_compare.cpp)
+target_link_libraries(GC_GA_compare ant tbb ${COIN_LIBS})
 
 # methods
 

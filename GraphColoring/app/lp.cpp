@@ -7,7 +7,7 @@ int main(int argc, const char * argv[]) {
     std::string problem = "gc_20_7";
     std::string recoveryPath = "temp/" + problem;
 
-    GC_LP solver(GC_LP_Rules::PerEdge);
+    GC_LP solver;
     solver.set_max_seconds(10);
     solver.set_recovery_path(recoveryPath);
 

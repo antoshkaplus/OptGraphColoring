@@ -47,6 +47,12 @@ Graph ReadProblem(std::istream& in) {
     return builder.Build();
 }
 
+Graph ReadProblem(NodeCount nodeCount, int completeness) {
+    ifstream in(Format("data/gc_%d_%d"));
+    return ReadProblem(in);
+}
+
+
 class Coloring {
 
     struct Item {

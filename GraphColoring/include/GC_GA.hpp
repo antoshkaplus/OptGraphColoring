@@ -3,6 +3,7 @@
 #include <chrono>
 #include <random>
 #include <algorithm>
+#include <optional>
 
 #include "GC.hpp"
 
@@ -127,10 +128,10 @@ private:
     };
 
     struct Params {
-        std::experimental::optional<double> mutation_frequency;
-        std::experimental::optional<double> population_size;
-        std::experimental::optional<bool> one_child_per_couple;
-        std::experimental::optional<bool> continious_mutation;
+        std::optional<double> mutation_frequency;
+        std::optional<double> population_size;
+        std::optional<bool> one_child_per_couple;
+        std::optional<bool> continious_mutation;
     };
 
     default_random_engine rng_{static_cast<unsigned>(chrono::system_clock::now().time_since_epoch().count())};

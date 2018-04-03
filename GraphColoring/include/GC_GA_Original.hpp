@@ -11,7 +11,7 @@
 // Musa M. Hindi and Roman V. Yampolskiy
 
 // Chromosome - coloring of the graph
-struct GC_GA : GC {
+struct GC_GA_Original : GC {
 private:
     using Population = vector<vector<Color>>;
     using Coloring = vector<Color>;
@@ -28,6 +28,9 @@ private:
     vector<bool> adjacent_colors_buffer_;
     vector<int> top_individuals_buffer_;
     vector<int> valid_colors_buffer_;
+
+    // get edges
+    vector<Edge> edges_;
 
     Count population_size_ = 50;
     Count max_iteration_count_ = 20000;
