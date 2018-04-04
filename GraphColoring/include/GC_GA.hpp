@@ -13,6 +13,16 @@
 // Musa M. Hindi and Roman V. Yampolskiy
 
 // Chromosome - coloring of the graph
+
+
+enum class GC_GA_Flags : uint32_t {
+    None = 0,
+    Mutation_1_Random = 1 << 0,
+    Mutation_2_Random = 1 << 1
+};
+
+
+template<GC_GA_Flags flags>
 struct GC_GA : GC {
 private:
 
@@ -34,7 +44,7 @@ private:
     };
 
     class Population {
-        using It = vector<Sample>::iterator;
+        using It = typename vector<Sample>::iterator;
 
         vector<Sample> samples;
         int capacity_;
@@ -58,17 +68,17 @@ private:
             return children_start;
         }
 
-        std::vector<Sample>::iterator begin() {
+        typename std::vector<Sample>::iterator begin() {
             return samples.begin();
         }
-        std::vector<Sample>::const_iterator begin() const {
+        typename std::vector<Sample>::const_iterator begin() const {
             return samples.begin();
         }
 
-        std::vector<Sample>::iterator end() {
+        typename std::vector<Sample>::iterator end() {
             return begin() + children_start;
         }
-        std::vector<Sample>::const_iterator end() const {
+        typename std::vector<Sample>::const_iterator end() const {
             return begin() + children_start;
         }
 
@@ -340,7 +350,8 @@ private:
         bool progress = false;
 
         vector<Edge> unresolved;
-        ForEachEdgeAtRandom([&](auto i, auto j) {
+
+        auto HandleEdge = [&](auto i, auto j) {
             if (child[i] != child[j]) return;
             if (real_distr_(rng_) < 0.5) swap(i, j);
             if (!ResetColor(i, *graph_, child, colorCount, rng_)) {
@@ -349,7 +360,14 @@ private:
             } else {
                 progress = true;
             }
-        });
+        };
+
+        if constexpr ((flags & GC_GA_Flags::Mutation_1_Random) != GC_GA_Flags::None) {
+            ForEachEdgeAtRandom(HandleEdge);
+        } else {
+            graph::ForEachEdge(*graph_, HandleEdge);
+        }
+
         vector<Edge> unresolved_new;
 
         if (!continious_mutation) progress = false;
@@ -357,15 +375,7 @@ private:
         while (progress) {
             progress = false;
             for (auto e : unresolved) {
-                auto [i, j] = e;
-                if (child[i] != child[j]) return;
-                if (real_distr_(rng_) < 0.5) swap(i, j);
-                if (!ResetColor(i, *graph_, child, colorCount, rng_)) {
-                    if (!ResetColor(j, *graph_, child, colorCount, rng_)) unresolved_new.emplace_back(i, j);
-                    else progress = true;
-                } else {
-                    progress = true;
-                }
+                HandleEdge(e.first, e.second);
             }
             if (progress) Println(cout, "helping");
             swap(unresolved, unresolved_new);
@@ -376,11 +386,17 @@ private:
 
     void mutation_2(Coloring& child, ColorCount colorCount) {
         uniform_int_distribution<int> color(0, colorCount-1);
-        ForEachEdgeAtRandom([&](auto i, auto j) {
+        auto HandleEdge = [&](auto i, auto j) {
             if (child[i] != child[j]) return;
             if (real_distr_(rng_) < 0.5) swap(i, j);
             while ((child[i] = color(rng_)) == child[j]);
-        });
+        };
+
+        if constexpr ((flags & GC_GA_Flags::Mutation_2_Random) != GC_GA_Flags::None) {
+            ForEachEdgeAtRandom(HandleEdge);
+        } else {
+            graph::ForEachEdge(*graph_, HandleEdge);
+        }
     }
 
     Index randomNode() {

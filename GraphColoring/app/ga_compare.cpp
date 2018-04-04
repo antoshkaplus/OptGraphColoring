@@ -8,10 +8,13 @@ struct Result {
     ColorCount colorCount;
 };
 
-int main() {
+template<GC_GA_Flags flags>
+void Compute(std::string_view name) {
+    vector<NodeCount> nodeCounts = {50};
+    vector<int> completeness = {1, 3};
 
-    vector<NodeCount> nodeCounts = {50, 100, 500};
-    vector<int> completeness = {1, 3, 5, 7, 9};
+//    vector<NodeCount> nodeCounts = {50, 100, 500};
+//    vector<int> completeness = {1, 3, 5, 7, 9};
 
     vector<pair<NodeCount, int>> problems;
     for (auto nodes : nodeCounts) {
@@ -20,18 +23,25 @@ int main() {
         }
     }
 
-    tbb::concurrent_vector<GC_GA> solvers(problems.size());
+    tbb::concurrent_vector<GC_GA<flags>> solvers(problems.size());
     vector<ColoredGraph> results(problems.size());
 
     tbb::parallel_for<Index>(0, problems.size(), [&](auto index) {
-         auto gr = ReadProblem(problems[index].first, problems[index].second);
-         results[index] = solvers[index].solve(gr);
+        auto gr = ReadProblem(problems[index].first, problems[index].second);
+        results[index] = solvers[index].solve(gr);
     });
 
-    // now I need to figure out how to accumulate results
-    auto name = "temp";
-    ofstream out(Format("score/ga_compare_%s", name));
+    ofstream out(Format("scores/ga_compare_%s", name));
     for (auto i = 0; i < problems.size(); ++i) {
         Println(out, Format("%d %d %d", problems[i].first, problems[i].second, results[i].colorCount()));
     }
+}
+
+
+int main() {
+
+    Compute<GC_GA_Flags::Mutation_1_Random>("mut_1_random");
+    Compute<GC_GA_Flags::Mutation_2_Random>("mut_2_random");
+    Compute<GC_GA_Flags::None>("none");
+
 }

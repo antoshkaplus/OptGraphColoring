@@ -4,5 +4,6 @@ cmake-build-*/
 .idea/
 
 temp/
+scores/
 
 *.pyc

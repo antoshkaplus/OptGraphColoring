@@ -48,7 +48,7 @@ Graph ReadProblem(std::istream& in) {
 }
 
 Graph ReadProblem(NodeCount nodeCount, int completeness) {
-    ifstream in(Format("data/gc_%d_%d"));
+    ifstream in(Format("data/gc_%d_%d", nodeCount, completeness));
     return ReadProblem(in);
 }
 
