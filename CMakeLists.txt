@@ -4,7 +4,10 @@
 cmake_minimum_required(VERSION 3.1)
 project(GraphColoring)
 
-set(CMAKE_CXX_FLAGS "-std=c++17 -Wno-sign-compare -Wall -Werror -Wno-error=unused-private-field")
+set(CMAKE_CXX_FLAGS "-std=c++17 -Wno-sign-compare -Wall -Werror")
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    list(APPEND CMAKE_CXX_FLAGS -Wno-error=unused-private-field)
+endif()
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -g")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3 -march=native -DNDEBUG")

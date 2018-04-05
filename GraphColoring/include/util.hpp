@@ -35,6 +35,22 @@ using ColorCount    = Node;
 constexpr Color COLOR_NONE = -1;
 
 
+struct Problem {
+    NodeCount nodeCount;
+    int completeness;
+};
+
+vector<Problem> ProblemSet() {
+    vector<Problem> ps;
+
+}
+
+vector<NodeCount> nodeCounts = {50, 70, 100, 250, 500};
+vector<int> completeness = {1, 3, 5, 7, 9};
+
+vector<pair<NodeCount, int>> problems;
+
+
 Graph ReadProblem(std::istream& in) {
     Count nodeCount, edgeCount;
     in >> nodeCount >> edgeCount;

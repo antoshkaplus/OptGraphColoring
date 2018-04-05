@@ -18,7 +18,8 @@
 enum class GC_GA_Flags : uint32_t {
     None = 0,
     Mutation_1_Random = 1 << 0,
-    Mutation_2_Random = 1 << 1
+    Mutation_2_Random = 1 << 1,
+    CrossoverBoth = 1 << 2
 };
 
 
@@ -114,19 +115,6 @@ private:
             }
         }
 
-        int RemoveBottomHalf() {
-            if (children_start != capacity_) return std::numeric_limits<int>::max();
-
-            sort(samples.begin(), samples.end());
-//
-//            sort(samples.begin(), samples.end(), [](auto& s_1, auto& s_2) {
-//                return s_1.violations < s_2.violations;
-//            });
-
-            children_start = capacity_ / 2;
-            return samples[children_start].violations;
-        }
-
         const Sample& operator[](int i) const {
             assert(i < children_start);
             return samples[i];
@@ -135,13 +123,6 @@ private:
         const Sample& MinViolations() const {
             return *min_element(begin(), end());
         }
-    };
-
-    struct Params {
-        std::optional<double> mutation_frequency;
-        std::optional<double> population_size;
-        std::optional<bool> one_child_per_couple;
-        std::optional<bool> continious_mutation;
     };
 
     default_random_engine rng_{static_cast<unsigned>(chrono::system_clock::now().time_since_epoch().count())};
@@ -159,11 +140,19 @@ private:
     bool one_child_per_couple = false;
     bool continious_mutation = false;
 
+    int critical_fitness = 4;
+
+    bool verbose = false;
+
     Population generation;
     Population next_generation;
     vector<Edge> edges;
 
-    int iteration = 0;
+    Index iteration = 0;
+    Index max_solution_iteration_ = 0;
+
+    Count next_generation_1_count_ = 0;
+    Count next_generation_2_count_ = 0;
 
 public:
     string name() override {
@@ -185,27 +174,46 @@ public:
     Count max_iteration_count() const {
         return max_iteration_count_;
     }
-    
-    
+
+    Index max_solution_iteration() const {
+        return max_solution_iteration_;
+    }
+
+    Count next_generation_1_count() const {
+        return next_generation_1_count_;
+    }
+
+    Count next_generation_2_count() const {
+        return next_generation_2_count_;
+    }
+
+    void set_mutation_frequency(double value) {
+        mutation_frequency = value;
+    }
+
+    void set_critical_fitness(int value) {
+        critical_fitness = value;
+    }
+
+    void set_top_portion(double value) {
+        top_portion_ = value;
+    }
+
+    void set_verbose(bool value) {
+        verbose = value;
+    }
+
     ColoredGraph solve(const Graph& gr) override {
-        node_distr_ = uniform_int_distribution<>(0, gr.nodeCount()-1);
-        // always init edges first
-        graph_ = &gr;
-        
+        Init(gr);
+
         GC_Naive_2 naive;
-        ColoredGraph c_gr = naive.solve(gr); 
+        ColoredGraph c_gr = naive.solve(gr);
         Count color_count = c_gr.colorCount();
         int node_count = gr.nodeCount();
         Coloring coloring(node_count);
         for (auto i = 0; i < node_count; ++i) {
             coloring[i] = c_gr.color(i);
         }
-
-        graph::ForEachEdge(gr, [&](auto i, auto j) {
-            edges.emplace_back(i, j);
-        });
-
-        next_generation = generation = Population(node_count, population_size_);
 
         // has time
         while (true) {
@@ -216,30 +224,26 @@ public:
             bool found = false;
 
             int best_fitness = 10000;
-            for (iteration = 0; iteration  < max_iteration_count_; ++iteration ) {
-
-
+            for (iteration = 0; iteration < max_iteration_count_; ++iteration) {
 
                 if (best_fitness == 0) {
-                    cout << "iterations "  << iteration  << endl;
+                    if (verbose) cout << "iterations "  << iteration  << endl;
                     break;
                 }
-                if (best_fitness > 4) {
+                if (best_fitness > critical_fitness) {
+                    ++next_generation_1_count_;
                     nextGeneration(std::bind(&GC_GA::selectParents_1, this),
                                    std::bind(&GC_GA::crossover_1, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
                                    std::bind(&GC_GA::mutation_1, this, std::placeholders::_1, color_count));
                 } else {
-//                    generation.RemoveBottomHalf();
+                    ++next_generation_2_count_;
                     nextGeneration(std::bind(&GC_GA::selectParents_2, this),
                                    std::bind(&GC_GA::crossover_2, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
                                    std::bind(&GC_GA::mutation_2, this, std::placeholders::_1, color_count));
                 }
 
-                // TODO full replacement is good
-                generation = next_generation;
+                swap(generation, next_generation);
                 generation.Sort();
-//                generation.Merge(next_generation);
-//                swap(generation, next_generation);
 
                 if (!found) {
                     bool next_gen = false;
@@ -249,11 +253,11 @@ public:
                             break;
                         }
                     }
-                    if (!next_gen) Println(cout, "next gen not included ", iteration);
+                    if (!next_gen && verbose) Println(cout, "next gen not included ", iteration);
 //                    found = true;
                 }
 
-                best_fitness = min_element(next_generation.begin(), next_generation.end())->violations;
+                best_fitness = generation[0].violations;
                 next_generation.Reset();
             }
 
@@ -262,11 +266,13 @@ public:
             }
 
             if (!isFeasibleColoring(ColoredGraph(gr, generation[0].coloring))) {
-                Println(cout, generation[0].coloring);
+                if (verbose) Println(cout, generation[0].coloring);
                 throw std::runtime_error("found solution is not feasible");
             }
 
-            std::cout << "sol found " << color_count << endl;
+            max_solution_iteration_ = max(max_solution_iteration_, iteration);
+
+            if (verbose) std::cout << "sol found " << color_count << endl;
             coloring = generation[0].coloring;
         }
         return ColoredGraph(gr, coloring);
@@ -274,7 +280,24 @@ public:
 
 
 private:
-    
+
+    void Init(const Graph& gr) {
+        node_distr_ = uniform_int_distribution<>(0, gr.nodeCount()-1);
+        // always init edges first
+        graph_ = &gr;
+
+        graph::ForEachEdge(gr, [&](auto i, auto j) {
+            edges.emplace_back(i, j);
+        });
+
+        next_generation = generation = Population(gr.nodeCount(), population_size_);
+
+        max_solution_iteration_ = 0;
+
+        next_generation_1_count_ = 0;
+        next_generation_2_count_ = 0;
+    }
+
     int countViolations(const Coloring& coloring) {
         int violation_count = 0;
         graph::ForEachEdge(*graph_, [&](auto i, auto j) {
@@ -286,8 +309,10 @@ private:
     }
 
     void crossover_1(Coloring& child, const Sample& p_0, const Sample& p_1) {
-        // TODO maybe always should include genes from both parents or not
         uniform_int_distribution<int> crosspoint_distr(0, graph_->nodeCount());
+        if constexpr((flags | GC_GA_Flags::CrossoverBoth) != GC_GA_Flags::None) {
+            crosspoint_distr = decltype(crosspoint_distr){1, graph_->nodeCount()-1};
+        }
         int crosspoint = crosspoint_distr(rng_);
 
         copy(p_0.coloring.begin(), p_0.coloring.begin() + crosspoint, child.begin());
@@ -312,8 +337,7 @@ private:
     };
 
     std::pair<int, int> selectParents_2() {
-        // TODO not reducing capacity is a bad thing
-        uniform_int_distribution<int> indices(0, (generation.capacity()/2)-1);
+        uniform_int_distribution<int> indices(0, min(static_cast<int>(top_portion_*generation.capacity()), generation.capacity()-1));
         return {indices(rng_), indices(rng_)};
     }
 
@@ -337,9 +361,9 @@ private:
                 }
             }
             crossover(sample.coloring, generation[ss_1], generation[ss_2]);
-//            if (real_distr_(rng_) < mutation_frequency) {
-                mutation(sample.coloring);
-//            }
+
+            mutation(sample.coloring);
+
             sample.violations = countViolations(sample.coloring);
             sample.iteration = iteration;
         });
@@ -347,18 +371,12 @@ private:
 
     void mutation_1(Coloring& child, ColorCount colorCount) {
         if (real_distr_(rng_) > mutation_frequency) return;
-        bool progress = false;
-
-        vector<Edge> unresolved;
 
         auto HandleEdge = [&](auto i, auto j) {
             if (child[i] != child[j]) return;
             if (real_distr_(rng_) < 0.5) swap(i, j);
             if (!ResetColor(i, *graph_, child, colorCount, rng_)) {
-                if (!ResetColor(j, *graph_, child, colorCount, rng_)) unresolved.emplace_back(i, j);
-                else progress = true;
-            } else {
-                progress = true;
+                !ResetColor(j, *graph_, child, colorCount, rng_);
             }
         };
 
@@ -367,21 +385,6 @@ private:
         } else {
             graph::ForEachEdge(*graph_, HandleEdge);
         }
-
-        vector<Edge> unresolved_new;
-
-        if (!continious_mutation) progress = false;
-
-        while (progress) {
-            progress = false;
-            for (auto e : unresolved) {
-                HandleEdge(e.first, e.second);
-            }
-            if (progress) Println(cout, "helping");
-            swap(unresolved, unresolved_new);
-            unresolved_new.clear();
-        }
-
     }
 
     void mutation_2(Coloring& child, ColorCount colorCount) {
@@ -426,8 +429,27 @@ private:
 
             int j = i + 1;
             for (; j < population.size() && population[i] == population[j]; ++j);
-            if (j-i-1 > 0) Println(cout, "index: ", i, " duplicates: ", j-i-1);
+            if (j-i-1 > 0 && verbose) Println(cout, "index: ", i, " duplicates: ", j-i-1);
             i = j;
         }
+    }
+};
+
+
+struct GC_GA_Params {
+    std::optional<double> mutation_frequency;
+    std::optional<int> population_size;
+    std::optional<bool> one_child_per_couple;
+    std::optional<int> critical_fitness;
+    std::optional<double> top_portion;
+    std::optional<bool> verbose;
+
+    template<GC_GA_Flags flags>
+    void Set(GC_GA<flags>& solver) const {
+        if (mutation_frequency) solver.set_mutation_frequency(mutation_frequency.value());
+        if (population_size) solver.set_population_size(population_size.value());
+        if (critical_fitness) solver.set_critical_fitness(critical_fitness.value());
+        if (top_portion) solver.set_top_portion(top_portion.value());
+        if (verbose) solver.set_verbose(verbose.value());
     }
 };
