@@ -6,7 +6,7 @@
 int main(int argc, const char * argv[]) {
     if (argc == 1) {
         vector<unique_ptr<GC>> ms;
-        ms.emplace_back(new GC_GA());
+        ms.emplace_back(new GC_GA<GC_GA_Flags::None>());
         compareMethods(ms);
         return 0;
     }

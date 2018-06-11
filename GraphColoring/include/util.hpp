@@ -40,10 +40,10 @@ struct Problem {
     int completeness;
 };
 
-vector<Problem> ProblemSet() {
-    vector<Problem> ps;
-
-}
+//vector<Problem> ProblemSet() {
+//    vector<Problem> ps;
+//
+//}
 
 vector<NodeCount> nodeCounts = {50, 70, 100, 250, 500};
 vector<int> completeness = {1, 3, 5, 7, 9};
@@ -153,4 +153,14 @@ bool ResetColor(Node node, const Graph& graph, vector<Color>& coloring, ColorCou
     uniform_int_distribution<int> distr{0, static_cast<int>(valid.size())-1};
     coloring[node] = valid[distr(rng)];
     return true;
+}
+
+Count CountViolations(const Graph& gr, const Coloring& colors) {
+    int violation_count = 0;
+    graph::ForEachEdge(gr, [&](auto i, auto j) {
+        if (colors[i] == colors[j]) {
+            ++violation_count;
+        }
+    });
+    return violation_count;
 }

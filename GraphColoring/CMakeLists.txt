@@ -58,3 +58,6 @@ target_compile_definitions(gc_kempe_chain PUBLIC -DKEMPE_CHAIN)
 add_executable(gc_lp app/methods.cpp)
 target_link_libraries(gc_lp ant ${COIN_LIBS})
 target_compile_definitions(gc_lp PUBLIC -DLP)
+
+add_executable(gc_sa app/methods.cpp)
+target_compile_definitions(gc_sa PUBLIC -DSA)

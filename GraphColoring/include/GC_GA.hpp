@@ -298,16 +298,6 @@ private:
         next_generation_2_count_ = 0;
     }
 
-    int countViolations(const Coloring& coloring) {
-        int violation_count = 0;
-        graph::ForEachEdge(*graph_, [&](auto i, auto j) {
-            if (coloring[i] == coloring[j]) {
-                ++violation_count;
-            }
-        });
-        return violation_count;
-    }
-
     void crossover_1(Coloring& child, const Sample& p_0, const Sample& p_1) {
         uniform_int_distribution<int> crosspoint_distr(0, graph_->nodeCount());
         if constexpr((flags | GC_GA_Flags::CrossoverBoth) != GC_GA_Flags::None) {
@@ -364,7 +354,7 @@ private:
 
             mutation(sample.coloring);
 
-            sample.violations = countViolations(sample.coloring);
+            sample.violations = CountViolations(*graph_, sample.coloring);
             sample.iteration = iteration;
         });
     }
@@ -411,7 +401,7 @@ private:
         for (auto& c : sample.coloring) {
             c = color_distr(rng_);
         }
-        sample.violations = countViolations(sample.coloring);
+        sample.violations = CountViolations(*graph_, sample.coloring);
         sample.iteration = iteration;
     }
 

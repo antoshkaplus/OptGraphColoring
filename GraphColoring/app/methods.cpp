@@ -6,6 +6,7 @@
 #include "GC_KempeChain.hpp"
 #include "GC_GA.hpp"
 #include "GC_LP.hpp"
+#include "GC_SA.hpp"
 
 
 int main(int argc, const char * argv[]) {
@@ -30,7 +31,7 @@ int main(int argc, const char * argv[]) {
 #endif
 #ifdef GA
 
-        GC_GA solver;
+        GC_GA<GC_GA_Flags::None> solver;
 //        GC_GA::Params params;
 
 //        solver.set_max_iteration_count(10000);
@@ -60,6 +61,11 @@ int main(int argc, const char * argv[]) {
 #ifdef LP
 
         GC_LP solver(GC_LP_Rules::PerEdge);
+
+#endif
+#ifdef SA
+
+        GC_SA solver(1000*1000*1000);
 
 #endif
 
