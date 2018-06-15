@@ -1,13 +1,4 @@
-//
-//  TSP_ConvexHull.h
-//  TravelingSalesman
-//
-//  Created by Anton Logunov on 3/29/14.
-//  Copyright (c) 2014 Anton Logunov. All rights reserved.
-//
-
-#ifndef __TravelingSalesman__TSP_ConvexHull__
-#define __TravelingSalesman__TSP_ConvexHull__
+#pragma once
 
 #include <iostream>
 
@@ -118,7 +109,3 @@ struct TSP_ConvexHull : TSP {
         
     }
 };
-
-
-
-#endif /* defined(__TravelingSalesman__TSP_ConvexHull__) */

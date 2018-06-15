@@ -1,13 +1,4 @@
-//
-//  TSP_NearestInsertion.h
-//  TravelingSalesman
-//
-//  Created by Anton Logunov on 3/30/14.
-//  Copyright (c) 2014 Anton Logunov. All rights reserved.
-//
-
-#ifndef __TravelingSalesman__TSP_NearestInsertion__
-#define __TravelingSalesman__TSP_NearestInsertion__
+#pragma once
 
 #include <iostream>
 #include <numeric>
@@ -54,7 +45,7 @@ struct TSP_NearestInsertion : TSP_InsertionSolver {
         priority_queue<Record, vector<Record>, greater<Record>> pr_queue;
         for (City c_in : startingTour) {
             City c = *NearestPoint(points, outTourCities.begin(), outTourCities.end(), points[c_in]);
-            pr_queue.push(Record(c_in, c, points[c_in].distance(points[c])));
+            pr_queue.push(Record(c_in, c, points[c_in].Distance(points[c])));
         }
         
         size_t i = startingTour.size();
@@ -74,11 +65,11 @@ struct TSP_NearestInsertion : TSP_InsertionSolver {
                 }
                 EdgeIt removingEdge = min(es[0], es[1], [&](const EdgeIt& e_0, const EdgeIt& e_1) {
                     auto &ps = points;
-                    return -ps[e_0->at(0)].distance(ps[e_0->at(1)]) 
-                           +ps[e_0->otherCity(r.inTourCity)].distance(ps[r.nearestCity]) <  
+                    return -ps[e_0->at(0)].Distance(ps[e_0->at(1)])
+                           +ps[e_0->otherCity(r.inTourCity)].Distance(ps[r.nearestCity]) <
                            
-                           -ps[e_1->at(0)].distance(ps[e_1->at(1)]) 
-                           +ps[e_1->otherCity(r.inTourCity)].distance(ps[r.nearestCity]);
+                           -ps[e_1->at(0)].Distance(ps[e_1->at(1)])
+                           +ps[e_1->otherCity(r.inTourCity)].Distance(ps[r.nearestCity]);
                 });
                 
                 City c = removingEdge->otherCity(r.inTourCity);
@@ -91,20 +82,17 @@ struct TSP_NearestInsertion : TSP_InsertionSolver {
                 
                 if (outTourCities.size()) { 
                     City c_out = *NearestPoint(points, outTourCities.begin(), outTourCities.end(), points[r.nearestCity]);
-                    pr_queue.push(Record(r.nearestCity, c_out, points[r.nearestCity].distance(points[c_out])));
+                    pr_queue.push(Record(r.nearestCity, c_out, points[r.nearestCity].Distance(points[c_out])));
                 }
                 
                 i++;
             }
             if (outTourCities.size()) { 
                 City c = *NearestPoint(points, outTourCities.begin(), outTourCities.end(), points[r.inTourCity]);
-                pr_queue.push(Record(r.inTourCity, c, points[r.inTourCity].distance(points[c])));
+                pr_queue.push(Record(r.inTourCity, c, points[r.inTourCity].Distance(points[c])));
             }
         }
         
         return edgesToTour(edges);
     }
 };
-
-
-#endif /* defined(__TravelingSalesman__TSP_NearestInsertion__) */

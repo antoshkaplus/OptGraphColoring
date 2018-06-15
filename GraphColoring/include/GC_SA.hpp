@@ -1,5 +1,36 @@
 #pragma once
 
+#include "GC.hpp"
+
+
+struct CoolingSchedule {
+    double temperature(Index iteration) {
+        return 0;
+    }
+};
+
+struct CoolingSchedule_1 {
+private:
+    double beta_init = 0.98;
+    double alpha_factor;
+
+
+
+    double alpha() const {
+        return (0.2 + alpha_factor) / 0.2;
+    }
+
+public:
+    CoolingSchedule_1(Count node_count, Count iterations)
+            : alpha_factor(static_cast<double>(node_count)/iterations) {}
+
+    double temperature(Index iteration) {
+        return 1. / (beta_init * pow(alpha(), iteration));
+    }
+};
+
+
+template<typename CoolingSchedule, bool binary_search = false>
 class GC_SA : GC {
 
     struct Coloring {
@@ -19,14 +50,21 @@ class GC_SA : GC {
     std::default_random_engine rng;
     const Count iterations;
 
+    CoolingSchedule cooling_schedule;
+    std::vector<Count> violations_;
+    std::vector<double> temperatures_;
+
 public:
     GC_SA(Count iterations) : iterations(iterations) {}
+
+    GC_SA(const CoolingSchedule& cooling, Count iterations)
+            : iterations(iterations), cooling_schedule(cooling) {}
 
     ColoredGraph solve(const Graph& gr) override {
         this->gr = &gr;
         node_distr = std::uniform_int_distribution(0, gr.nodeCount()-1);
 
-        GC_Naive naive;
+        GC_Naive_2 naive;
         auto res = naive.solve(gr);
 
         Coloring coloring;
@@ -37,15 +75,38 @@ public:
             coloring.colors[i] = res.color(i);
         }
 
-        while (auto res = Solve(gr, iterations, coloring.color_count-1)) {
-            coloring = res.value();
-        }
+        if constexpr (binary_search) {
 
+            // takes longer, should try to use partial binary search if use one at all
+            LogicalBinarySearch::Min(2, coloring.color_count, [&,this](Count color_count) {
+                auto res = Solve(gr, iterations, color_count);
+                if (!res) return false;
+                if (res.value().color_count < coloring.color_count) {
+                    coloring = res.value();
+                }
+                return true;
+            });
+
+        } else {
+
+            while (auto res = Solve(gr, iterations, coloring.color_count - 1)) {
+                coloring = res.value();
+            }
+
+        }
         return {gr, coloring.colors};
     }
 
     string name() {
         return "SA";
+    }
+
+    const vector<Count>& violations() const {
+        return violations_;
+    }
+
+    const vector<double>& temperatures() const {
+        return temperatures_;
     }
 
 private:
@@ -54,32 +115,31 @@ private:
         std::uniform_real_distribution<> zero_one_distr;
 
         auto coloring = RandomColoring(gr.nodeCount(), color_count);
-        auto trials = 0;
-        auto beta = 0.98;
         for (auto iter = 0; iter < iterations; ++iter) {
-            auto deriv = GenDerivative(coloring);
-            double prob = 0;
-            double t = 0;
-            if (deriv.new_violations < coloring.violations ||
-                // maybe change sign
-                (prob = exp(t = (deriv.new_violations - coloring.violations)*beta)) > zero_one_distr(rng))  {
+            // same as generate neighbour
+            for (auto trial = 0; trial < temperature_trials(); ++trial) {
 
-                //(prob = exp(t = (-(deriv.new_violations-coloring.violations)*beta))) > zero_one_distr(rng)) {
-                Apply(coloring, deriv);
-            }
+                auto deriv = GenDerivative(coloring);
 
-            if (coloring.violations == 0) {
-                return {coloring};
-            }
+                if (deriv.new_violations < coloring.violations ||
+                    exp(-(deriv.new_violations - coloring.violations) / cooling_schedule.temperature(iter)) > zero_one_distr(rng)) {
+                    Apply(coloring, deriv);
+                }
 
-            if (++trials == 3.4 * gr.nodeCount())
-            {
-                beta *= (0.2 + gr.nodeCount() / iterations) / 0.2;
-                trials = 0;
+                if (coloring.violations == 0) {
+                    return {coloring};
+                }
+
+//                temperatures_.push_back(cooling_schedule.temperature(iter));
+//                violations_.push_back(coloring.violations);
             }
         }
 
         return {};
+    }
+
+    Count temperature_trials() const {
+        return 3.4 * gr->nodeCount();
     }
 
     Derivative GenDerivative(const Coloring& coloring) {

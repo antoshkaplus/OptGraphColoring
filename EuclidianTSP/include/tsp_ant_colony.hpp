@@ -1,13 +1,4 @@
-//
-//  TSP_AntColony.h
-//  TravelingSalesman
-//
-//  Created by Anton Logunov on 4/3/14.
-//  Copyright (c) 2014 Anton Logunov. All rights reserved.
-//
-
-#ifndef __TravelingSalesman__TSP_AntColony__
-#define __TravelingSalesman__TSP_AntColony__
+#pragma once
 
 #include <iostream>
 #include <armadillo>
@@ -20,17 +11,17 @@
  * Marco Dorigo, Luca Maria Gambardella
  **/
 struct TSP_AntColony : TSP_Solver {
-    
+
     struct Ant {
-    
+
         const TSP_AntColony *solver;
-    
+
         vector<City>    tour;
         vector<City>    unvisitedCities;
         vector<double>  unvisitedCityValues;
-    
+
         Count cityCount;
-        
+
         void setSolver(const TSP_AntColony *solver) {
             this->solver = solver;
             cityCount = solver->cityCount;
@@ -39,7 +30,7 @@ struct TSP_AntColony : TSP_Solver {
             tour.reserve(cityCount);
             unvisitedCityValues.reserve(cityCount);
         }
-        
+
         void prepareForTourConstruction() {
             tour.resize(0);
             unvisitedCities.resize(cityCount);
@@ -65,16 +56,16 @@ struct TSP_AntColony : TSP_Solver {
             auto parPheromone       = solver->parPheromone;
             auto parDistance        = solver->parDistance;
             auto parTakingBestEdge  = solver->parTakingBestEdge;
-            
+
             unvisitedCityValues.resize(unvisitedCities.size());
             for (Index i = 0; i < unvisitedCities.size(); i++) {
-                unvisitedCityValues[i] = pow(pheromone.at((uint)tour.back(), 
+                unvisitedCityValues[i] = pow(pheromone.at((uint)tour.back(),
                                               (uint)unvisitedCities[i]), parPheromone)
                                          *
-                                         pow( distance.at((uint)tour.back(), 
+                                         pow( distance.at((uint)tour.back(),
                                               (uint)unvisitedCities[i])/1000.,-parDistance );
             }
-            
+
             double r = random();
             // can we just take best edge???
             if (r < parTakingBestEdge) {
@@ -86,15 +77,15 @@ struct TSP_AntColony : TSP_Solver {
                 }
                 visit(i_max);
             } else { // no // will choose edge by probability
-                double valueSum = accumulate(unvisitedCityValues.begin(), 
+                double valueSum = accumulate(unvisitedCityValues.begin(),
                                              unvisitedCityValues.end(), 0.);
                 for (auto& v : unvisitedCityValues) {
                     v /= valueSum;
                 }
-                
+
                 Index i = 0;
                 double pr = random();
-                double cumulative = unvisitedCityValues[i]; 
+                double cumulative = unvisitedCityValues[i];
                 assert(pr != 0. && pr != 1.);
                 while (pr > cumulative) cumulative += unvisitedCityValues[++i];
                 assert(i < unvisitedCities.size());
@@ -102,11 +93,9 @@ struct TSP_AntColony : TSP_Solver {
             }
         }
     };
-    
+
     typedef vector<vector<City>> AntTours;
-    typedef u_int Index;
-    typedef u_int Count;
-    
+
     Count cityCount;
     
     arma::Mat<double> pheromone;
@@ -155,9 +144,9 @@ struct TSP_AntColony : TSP_Solver {
         // for each ant you make local search to know best ant
         TSP_TwoOpt imp;
         TSP_ThreeOpt improver;
-        for (auto& a : ants) {
-            //a.tour = improver.improve(*points, a.tour);
-        }
+//        for (auto& a : ants) {
+//            //a.tour = improver.improve(*points, a.tour);
+//        }
     }
     
     
@@ -204,9 +193,9 @@ struct TSP_AntColony : TSP_Solver {
         TSP_NearestNeighbor solver;
         shortestTour       = solver.solve(points);
         shortestTourLength = Perimeter(points, shortestTour, true);
-        
+
         cout << "start solution: " << shortestTourLength << endl;
-        
+
         parPheromone        = 1.;        
         parDistance         = 2.;
         parEvaporation      = 0.1;
@@ -223,7 +212,7 @@ struct TSP_AntColony : TSP_Solver {
         pheromone.fill(parLocalTrail);
         for (uint i_0 = 0; i_0 < cityCount; i_0++) {
             for (uint i_1 = i_0; i_1 < cityCount; i_1++) {
-                distance(i_0, i_1) = distance(i_1, i_0) = points[i_0].distance(points[i_1]);
+                distance(i_0, i_1) = distance(i_1, i_0) = points[i_0].Distance(points[i_1]);
             }
         }
         ants.resize(antCount);
@@ -239,6 +228,3 @@ struct TSP_AntColony : TSP_Solver {
     }
     
 };
-
-
-#endif /* defined(__TravelingSalesman__TSP_AntColony__) */

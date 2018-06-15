@@ -1,13 +1,4 @@
-//
-//  TSP_LocalSearch.h
-//  TravelingSalesman
-//
-//  Created by Anton Logunov on 4/5/14.
-//  Copyright (c) 2014 Anton Logunov. All rights reserved.
-//
-
-#ifndef __TravelingSalesman__TSP_LocalSearch__
-#define __TravelingSalesman__TSP_LocalSearch__
+#pragma once
 
 #include <iostream>
 
@@ -72,7 +63,4 @@
 //        } while (start_again);
 //        return tour;
 //    }
-//}; 
-
-
-#endif /* defined(__TravelingSalesman__TSP_LocalSearch__) */
+//};

@@ -1,13 +1,4 @@
-//
-//  TSP_ShortestEdge.h
-//  TravelingSalesman
-//
-//  Created by Anton Logunov on 3/30/14.
-//  Copyright (c) 2014 Anton Logunov. All rights reserved.
-//
-
-#ifndef __TravelingSalesman__TSP_ShortestEdge__
-#define __TravelingSalesman__TSP_ShortestEdge__
+#pragma once
 
 #include <functional>
 #include <iostream>
@@ -46,7 +37,7 @@ struct TSP_ShortestEdge : TSP {
                 pr_queue.push(Record(
                     c_0, 
                     c_1, 
-                    points[c_0].distance(points[c_1])));
+                    points[c_0].Distance(points[c_1])));
             }
         }
         
@@ -78,5 +69,3 @@ struct TSP_ShortestEdge : TSP {
         return edgesToTour(edges);
     }
 };
-
-#endif /* defined(__TravelingSalesman__TSP_ShortestEdge__) */

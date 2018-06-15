@@ -1,13 +1,4 @@
-//
-//  TSP_RandomInsertion.h
-//  TravelingSalesman
-//
-//  Created by Anton Logunov on 4/1/14.
-//  Copyright (c) 2014 Anton Logunov. All rights reserved.
-//
-
-#ifndef __TravelingSalesman__TSP_RandomInsertion__
-#define __TravelingSalesman__TSP_RandomInsertion__
+#pragma once
 
 #include <iostream>
 
@@ -68,11 +59,11 @@ struct TSP_RandomInsertion : TSP_InsertionSolver {
             
             auto &ps = points;
             // is (prev city - city out - city in) more optimum chain
-            if (-ps[city_prev].distance(ps[city_in]) 
-                +ps[city_prev].distance(ps[city_out]) <  
+            if (-ps[city_prev].Distance(ps[city_in])
+                +ps[city_prev].Distance(ps[city_out]) <
     
-                -ps[city_next].distance(ps[city_in]) 
-                +ps[city_next].distance(ps[city_out])) {
+                -ps[city_next].Distance(ps[city_in])
+                +ps[city_next].Distance(ps[city_out])) {
                 
                 tour.insertBefore(ind_in, city_out);
             } else {
@@ -82,5 +73,3 @@ struct TSP_RandomInsertion : TSP_InsertionSolver {
         return tour;
     }
 };
-
-#endif /* defined(__TravelingSalesman__TSP_RandomInsertion__) */

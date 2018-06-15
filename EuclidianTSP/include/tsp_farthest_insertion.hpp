@@ -1,13 +1,4 @@
-//
-//  TSP_FarthestInsertion.h
-//  TravelingSalesman
-//
-//  Created by Anton Logunov on 3/31/14.
-//  Copyright (c) 2014 Anton Logunov. All rights reserved.
-//
-
-#ifndef __TravelingSalesman__TSP_FarthestInsertion__
-#define __TravelingSalesman__TSP_FarthestInsertion__
+#pragma once
 
 #include <iostream>
 #include <queue>
@@ -53,7 +44,7 @@ struct TSP_FarthestInsertion : TSP_InsertionSolver {
         vector<Record> outTour;
         for (City c : outTourCities) {
             City c_in = *NearestPoint(points, startingTour.begin(), startingTour.end(), points[c]);
-            outTour.push_back(Record(c, c_in, points[c].distance(points[c_in])));
+            outTour.push_back(Record(c, c_in, points[c].Distance(points[c_in])));
         }
         
         size_t i = startingTour.size();
@@ -75,11 +66,11 @@ struct TSP_FarthestInsertion : TSP_InsertionSolver {
             assert(b==0);
             EdgeIt removingEdge = min(es[0], es[1], [&](const EdgeIt& e_0, const EdgeIt& e_1) {
                 auto &ps = points;
-                return -ps[e_0->at(0)].distance(ps[e_0->at(1)]) 
-                       +ps[e_0->otherCity(r.nearestInTourCity)].distance(ps[r.outTourCity]) <  
+                return -ps[e_0->at(0)].Distance(ps[e_0->at(1)])
+                       +ps[e_0->otherCity(r.nearestInTourCity)].Distance(ps[r.outTourCity]) <
                 
-                       -ps[e_1->at(0)].distance(ps[e_1->at(1)]) 
-                       +ps[e_1->otherCity(r.nearestInTourCity)].distance(ps[r.outTourCity]);
+                       -ps[e_1->at(0)].Distance(ps[e_1->at(1)])
+                       +ps[e_1->otherCity(r.nearestInTourCity)].Distance(ps[r.outTourCity]);
             });
             
             City c = removingEdge->otherCity(r.nearestInTourCity);
@@ -89,7 +80,7 @@ struct TSP_FarthestInsertion : TSP_InsertionSolver {
             edges.push_back(Edge(r.nearestInTourCity, r.outTourCity));
             
             for (Record& out_r : outTour) {
-                double d = points[r.outTourCity].distance(points[out_r.outTourCity]);
+                double d = points[r.outTourCity].Distance(points[out_r.outTourCity]);
                 if (out_r.distance > d) {
                     out_r.nearestInTourCity = r.outTourCity;
                     out_r.distance = d;
@@ -103,6 +94,3 @@ struct TSP_FarthestInsertion : TSP_InsertionSolver {
     }
 
 };
-
-
-#endif /* defined(__TravelingSalesman__TSP_FarthestInsertion__) */

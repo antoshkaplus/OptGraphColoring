@@ -16,7 +16,37 @@ if (NOT ANT_LIBRARY)
     message(FATAL_ERROR "ant library not found")
 endif()
 
+set_output_dirs()
 
 add_executable(EuclidianTSP ${SOURCE_FILES} ${HEADER_FILES})
 target_link_libraries(EuclidianTSP ${ARMA_LIBRARY} ${ANT_LIBRARY})
 
+# methods
+
+add_executable(tsp_simplex_ins app/methods.cpp)
+target_link_libraries(tsp_simplex_ins ant)
+target_compile_definitions(tsp_simplex_ins PUBLIC -DSIMPLEX_INS)
+
+add_executable(tsp_shortest_edge app/methods.cpp)
+target_link_libraries(tsp_shortest_edge ant)
+target_compile_definitions(tsp_shortest_edge PUBLIC -DSHORTEST_EDGE)
+
+add_executable(tsp_random_ins app/methods.cpp)
+target_link_libraries(tsp_random_ins ant)
+target_compile_definitions(tsp_random_ins PUBLIC -DRANDOM_INS)
+
+add_executable(tsp_nearest_neighbor app/methods.cpp)
+target_link_libraries(tsp_nearest_neighbor ant)
+target_compile_definitions(tsp_nearest_neighbor PUBLIC -DNEAREST_NEIGHBOR)
+
+add_executable(tsp_nearest_ins app/methods.cpp)
+target_link_libraries(tsp_nearest_ins ant)
+target_compile_definitions(tsp_nearest_ins PUBLIC -DNEAREST_INS)
+
+add_executable(tsp_farthest_ins app/methods.cpp)
+target_link_libraries(tsp_farthest_ins ant)
+target_compile_definitions(tsp_farthest_ins PUBLIC -DFARTHEST_INS)
+
+add_executable(tsp_ant_colony app/methods.cpp)
+target_link_libraries(tsp_ant_colony ant)
+target_compile_definitions(tsp_ant_colony PUBLIC -DANT_COLONY)

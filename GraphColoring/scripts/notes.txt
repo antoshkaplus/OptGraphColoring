@@ -1,6 +1,8 @@
 GA
 
-bigger population gets better results and reduces number of iterations needed.
+- Bigger population gets better results and reduces number of iterations needed.
+- It doesn't help much to randomize everything a lot.
+
 
 
 
@@ -56,26 +58,12 @@ naive_2:
 100_5 : 23
 100_7 : 29
 
+sa
+100_3 : 10
+100_5 : 16
+100_7 : 22 - with 1000000 iterations
 
-ga_compare_total : 8  max sol iter: 2505
-ga_compare_2_fit_06 : 9  max sol iter: 3477
-ga_compare_mut_2_random : 11  max sol iter: 1887
-ga_compare_2_freq_10 : 12  max sol iter: 3035
-ga_compare_2_none : 12  max sol iter: 973
-ga_compare_cross : 12  max sol iter: 2996
-ga_compare_2_mut_2_random : 13  max sol iter: 2094
-ga_compare_2_fit_04 : 13  max sol iter: 3874
-ga_compare_2_mut_random : 14  max sol iter: 2673
-ga_compare_2_mut_1_random : 14  max sol iter: 3015
-ga_compare_mut_1_random : 14  max sol iter: 1820
-ga_compare_2_freq_07 : 14  max sol iter: 732
-ga_compare_none : 16  max sol iter: 638
-ga_compare_top_04 : 16  max sol iter: 4084
-ga_compare_fit_05 : 17  max sol iter: 1803
-ga_compare_mut_random : 17  max sol iter: 1957
-ga_compare_pop_100 : 18  max sol iter: 893
-ga_compare_2_freq_05 : 18  max sol iter: 1427
-ga_compare_fit_07 : 19  max sol iter: 1113
-ga_compare_pop_70 : 26  max sol iter: 2653
-ga_compare_2_fit_10 : 29  max sol iter: 3101
-ga_compare_pop_50 : 42  max sol iter: 409
+
+
+
+

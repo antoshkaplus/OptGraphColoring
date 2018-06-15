@@ -5,6 +5,8 @@ find_library(ANT_LIBRARY ant)
 
 include_directories(include)
 
+set_output_dirs()
+
 add_executable(GraphColoring_Solver ${SOLVER_FILES})
 target_link_libraries(GraphColoring_Solver
         ${ANT_LIBRARY})
@@ -20,6 +22,9 @@ target_link_libraries(GC_LP_compare ant ${COIN_LIBS})
 
 add_executable(GC_GA_compare app/ga_compare.cpp)
 target_link_libraries(GC_GA_compare ant tbb ${COIN_LIBS})
+
+add_executable(GC_SA app/sa.cpp)
+target_link_libraries(GC_SA ant)
 
 # methods
 

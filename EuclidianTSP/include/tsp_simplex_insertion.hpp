@@ -1,13 +1,4 @@
-//
-//  tsp_simplex_insertion.hpp
-//  EuclidianTSP
-//
-//  Created by Anton Logunov on 4/27/15.
-//
-//
-
-#ifndef EuclidianTSP_tsp_simplex_insertion_hpp
-#define EuclidianTSP_tsp_simplex_insertion_hpp
+#pragma once
 
 #include "ant/grid/grid.hpp"
 
@@ -47,7 +38,7 @@ struct TSP_SimplexInsertion : TSP_Solver {
     priority_queue<Item> insertion_queue;
     
     double Distance(City c_0, City c_1) {
-        return (*points)[c_0].distance((*points)[c_1]);
+        return (*points)[c_0].Distance((*points)[c_1]);
     }
     
     bool Exists(Edge e) {
@@ -58,7 +49,7 @@ struct TSP_SimplexInsertion : TSP_Solver {
         double a = Distance(e[0], e[1]);
         double b = Distance(e[0], v);
         double c = Distance(e[1], v);
-        double p = (a + b + c)/2.;
+//        double p = (a + b + c)/2.;
         return b + c - a; // p*(p-a)*(p-b)*(p-c);
     }
     
@@ -152,9 +143,3 @@ struct TSP_SimplexInsertion : TSP_Solver {
     }
     
 };
-
-
-
-
-
-#endif

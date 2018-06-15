@@ -1,13 +1,4 @@
-//
-//  TSP.h
-//  TravelingSalesman
-//
-//  Created by Anton Logunov on 3/29/14.
-//  Copyright (c) 2014 Anton Logunov. All rights reserved.
-//
-
-#ifndef __TravelingSalesman__TSP__
-#define __TravelingSalesman__TSP__
+#pragma once
 
 #include <iostream>
 #include <vector>
@@ -16,7 +7,7 @@
 #include <stack>
 #include <chrono>
 
-#include "geometry.hpp"
+#include "tsp_util.hpp"
 
 typedef int City;
 
@@ -98,9 +89,9 @@ struct TSP {
             records.pop();
         }
     };
-    
+
     virtual vector<City> solve(const vector<Point>& points) = 0;
-    
+
     static vector<Edge> tourToEdges(const vector<City>& cities) {
         vector<Edge> edges;
         for (Index i = 0; i < cities.size(); i++) {
@@ -181,7 +172,7 @@ struct TSP_TwoOpt : TSP_Improver {
         vector<City> tour = in_tour;
         
         #define next(i, t) (((i)+1)%(t).size())
-        #define distance(i_0, i_1) (ps[tour[i_0]].distance(ps[tour[i_1]])) 
+        #define distance(i_0, i_1) (ps[tour[i_0]].Distance(ps[tour[i_1]]))
 //        function<Index(Index)> next = [&](Index i) { 
 //            return (i+1)%tour.size(); 
 //        };
@@ -234,7 +225,7 @@ struct TSP_TwoOptAndHalf : TSP_Improver {
             return (i+1)%tour.size(); 
         };
         function<double(Index, Index)> distance = [&](Index i0, Index i1) {
-            return ps[tour[i0]].distance(ps[tour[i1]]);
+            return ps[tour[i0]].Distance(ps[tour[i1]]);
         };
         
         Index reverseCount = 0, printedReverseCount = 0;
@@ -295,7 +286,7 @@ struct TSP_ThreeOpt : TSP_Improver {
             return (i+1)%tour.size(); 
         };
         function<double(Index, Index)> distance = [&](Index i0, Index i1) {
-            return ps[tour[i0]].distance(ps[tour[i1]]);
+            return ps[tour[i0]].Distance(ps[tour[i1]]);
         };
         bool start_again;
         do {
@@ -352,6 +343,3 @@ struct TSP_ThreeOpt : TSP_Improver {
         return tour;
     }
 };
-
-
-#endif /* defined(__TravelingSalesman__TSP__) */
