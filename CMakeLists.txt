@@ -4,7 +4,7 @@
 cmake_minimum_required(VERSION 3.1)
 project(GraphColoring)
 
-set(CMAKE_CXX_FLAGS "-std=c++2a -fconcepts -Wno-sign-compare -Wall -Werror")
+set(CMAKE_CXX_FLAGS "-std=c++2a -Wno-sign-compare -Wall -Werror")
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     list(APPEND CMAKE_CXX_FLAGS -Wno-error=unused-private-field)
 endif()

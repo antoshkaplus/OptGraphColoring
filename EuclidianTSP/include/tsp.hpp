@@ -9,29 +9,27 @@
 
 #include "tsp_util.hpp"
 
-typedef int City;
+using City = Index;
 
-using namespace std;
+struct Edge : array<City, 2> {
+    Edge() {}
+    Edge(const array<City, 2>& arr) : array<City, 2>(arr) {}
+    Edge(City c_0, City c_1) : array<City, 2>({c_0, c_1}) {}
+    Edge(initializer_list<City> list) : array<City, 2>({*list.begin(), *(list.begin()+1)}) {}
+
+    bool hasCity(City c) const {
+        return at(0) == c || at(1) == c;
+    }
+
+    City otherCity(City c) const {
+        return at(0) == c ? at(1) : at(0);
+    }
+};
 
 struct TSP {
     typedef double Distance;
     typedef int Count;
-    
-    struct Edge : array<City, 2> {
-        Edge() {}
-        Edge(const array<City, 2>& arr) : array<City, 2>(arr) {}
-        Edge(City c_0, City c_1) : array<City, 2>({c_0, c_1}) {}
-        Edge(initializer_list<City> list) : array<City, 2>({*list.begin(), *(list.begin()+1)}) {}
-        
-        bool hasCity(City c) const {
-            return at(0) == c || at(1) == c; 
-        }
-        
-        City otherCity(City c) const {
-            return at(0) == c ? at(1) : at(0);
-        }
-    };
-    
+
     struct DisjointSet {
         struct Record {
             Record(Index indexBeingChanged, bool didSizeIncrese) 
