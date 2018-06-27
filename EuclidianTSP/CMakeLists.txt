@@ -24,6 +24,9 @@ target_link_libraries(EuclidianTSP ${ARMA_LIBRARY} ${ANT_LIBRARY})
 add_executable(TSP_BM app/benchmark.cpp)
 target_link_libraries(TSP_BM benchmark ${ARMA_LIBRARY})
 
+add_executable(TSP_TEST app/test.cpp)
+target_link_libraries(TSP_TEST gtest)
+
 # methods
 
 add_executable(tsp_simplex_ins app/methods.cpp)
@@ -53,3 +56,7 @@ target_compile_definitions(tsp_farthest_ins PUBLIC -DFARTHEST_INS)
 add_executable(tsp_ant_colony app/methods.cpp)
 target_link_libraries(tsp_ant_colony ant)
 target_compile_definitions(tsp_ant_colony PUBLIC -DANT_COLONY)
+
+add_executable(tsp_sa app/methods.cpp)
+target_link_libraries(tsp_sa ant armadillo)
+target_compile_definitions(tsp_sa PUBLIC -DSA)

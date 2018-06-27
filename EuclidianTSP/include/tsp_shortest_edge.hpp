@@ -8,7 +8,7 @@
 
 #include "tsp.hpp"
 
-void printEdges(ostream& out, const vector<TSP::Edge>& edges);
+void printEdges(ostream& out, const vector<Edge>& edges);
 
 struct TSP_ShortestEdge : TSP {
     size_t maxCityCount = 8000;

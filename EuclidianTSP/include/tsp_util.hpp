@@ -1,5 +1,7 @@
 #pragma once
 
+#include <list>
+
 #include <ant/core/core.hpp>
 #include <ant/geometry/d2.hpp>
 
@@ -42,7 +44,7 @@ void WriteSolution(ostream& out, const Solution& sol) {
 
 bool isFeasibleSolution(const Problem& pr, const Solution& sol) {
     if (sol.size() != pr.size()) return false;
-    if (unordered_set(sol.begin(), sol.end()).size() != sol.size()) return false;
+    if (unordered_set<Index>(sol.begin(), sol.end()).size() != sol.size()) return false;
     auto minmax = minmax_element(sol.begin(), sol.end());
     if (*minmax.first != 0 || *minmax.second != sol.size()-1) return false;
 

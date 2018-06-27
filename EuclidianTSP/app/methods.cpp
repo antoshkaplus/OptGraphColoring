@@ -7,6 +7,7 @@
 #include "tsp_nearest_insertion.hpp"
 #include "tsp_farthest_insertion.hpp"
 #include "tsp_ant_colony.hpp"
+#include "tsp_sa.hpp"
 
 
 int main(int argc, const char * argv[]) {
@@ -57,7 +58,12 @@ int main(int argc, const char * argv[]) {
         solver.solve(problem);
 
 #endif
+#ifdef SA
 
+        TSP_SA solver(10000);
+        solver.solve(problem);
+
+#endif
 
         auto solution = solver.solve(problem);
         if (!isFeasibleSolution(problem, solution)) throw runtime_error("result is not feasible");

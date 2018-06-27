@@ -5,8 +5,8 @@ cmake_minimum_required(VERSION 3.1)
 project(GraphColoring)
 
 set(CMAKE_CXX_FLAGS "-std=c++2a -Wno-sign-compare -Wall -Werror")
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    list(APPEND CMAKE_CXX_FLAGS -Wno-error=unused-private-field)
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "(Clang|AppleClang)")
+    string(APPEND CMAKE_CXX_FLAGS " -Wno-unused-private-field -Wno-missing-braces")
 endif()
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -g")
