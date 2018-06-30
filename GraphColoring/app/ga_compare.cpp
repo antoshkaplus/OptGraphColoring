@@ -122,7 +122,7 @@ void ExploreTopPortion() {
 }
 
 int main() {
-
+    // best result mut freq 1 and critical fitness 6
     GC_GA_Params params;
     params.critical_fitness = 6;
     params.mutation_frequency = 1;
