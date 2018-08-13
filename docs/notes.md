@@ -9,12 +9,6 @@ Most common abbreviations:
 * SA - simulated annealing
 * ACO - ant colony optimization
 
-
-Work Process:
-* Explore simple heuristics
-* Build MIP solver
-* Improve MIP solver
-
 Optimization Methods:
 * GA
 * SA
