@@ -2,7 +2,8 @@
 
 #include <armadillo>
 
-#include "tsp_tour.hpp"
+#include "tsp.hpp"
+#include "tour/tsp_tour.hpp"
 
 class CoolingSchedule {
     double T_0 = 10000;
@@ -89,6 +90,7 @@ struct TSP_SA : TSP_Solver {
             // keep result someplace else too
             // or we don't really need to
         }
+        return res;
     }
 
 };

@@ -5,7 +5,9 @@
 
 #include "tsp.hpp"
 #include "tsp_sa.hpp"
-#include "tsp_tour.hpp"
+#include "tour/tsp_tour.hpp"
+#include "tour/tsp_vector_tour.hpp"
+#include "tour/tsp_tour_reverse.hpp"
 
 template<class Distance>
 void BM_TSP_Distance(benchmark::State& state) {
@@ -38,6 +40,7 @@ BENCHMARK_TEMPLATE(BM_TSP_Distance, DistanceCache)->Arg(100)->Arg(500)->Arg(700)
 class BM_TSP_VectorTourReverse_Fixture : public benchmark::Fixture {
 protected:
     VectorTour tour;
+    // to reverse
     vector<std::pair<Index, Index>> cityPairs;
 
 public:
@@ -101,6 +104,19 @@ static void UpdaterCombineArgs(benchmark::internal::Benchmark* b) {
 }
 
 BENCHMARK_REGISTER_F(BM_TSP_VectorTourReverse_Fixture, UpdaterCombine)->Apply(UpdaterCombineArgs);
+
+BENCHMARK_DEFINE_F(BM_TSP_VectorTourReverse_Fixture, VectorReverse)(benchmark::State& st) {
+    std::vector<Index> cities(tour.Size());
+
+    double ratio =  st.range(1) / 100.;
+    for (auto _ : st) {
+        for (auto p : cityPairs) {
+            Reverse(p.first, p.second, tour.Size(), [&](auto a, auto b) { std::swap(cities[a], cities[b]); }, ratio);
+        }
+    }
+}
+
+BENCHMARK_REGISTER_F(BM_TSP_VectorTourReverse_Fixture, VectorReverse)->Apply(UpdaterCombineArgs);
 
 
 int main(int argc, char **argv) {
