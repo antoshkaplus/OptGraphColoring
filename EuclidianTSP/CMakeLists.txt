@@ -25,7 +25,7 @@ add_executable(TSP_BM app/benchmark.cpp)
 target_link_libraries(TSP_BM benchmark pthread ${ARMA_LIBRARY})
 
 add_executable(TSP_TEST app/test.cpp)
-target_link_libraries(TSP_TEST gtest)
+target_link_libraries(TSP_TEST gtest pthread)
 
 # methods
 

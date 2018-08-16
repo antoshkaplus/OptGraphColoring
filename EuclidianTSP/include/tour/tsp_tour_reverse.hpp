@@ -35,10 +35,10 @@ class Updater_2 {
     Count iters;
 
     Index Prv(Index a, Count cityCount) {
-        return (a + cityCount - 1) % cityCount;
+        return prev_ring_index(a, cityCount);
     }
     Index Nxt(Index b, Count cityCount) {
-        return (b+1) % cityCount;
+        return next_ring_index(b, cityCount);
     }
 
 public:
