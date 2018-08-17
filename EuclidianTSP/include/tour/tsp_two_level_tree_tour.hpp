@@ -36,6 +36,8 @@ class TwoLevelTreeTour {
 
     Count sz_bound;
 
+    using ParentIt = std::list<Parent>::iterator;
+
 public:
     TwoLevelTreeTour(Count city_count) {
         sz_bound = static_cast<Count>(sqrt(city_count));
@@ -70,11 +72,30 @@ public:
         return elem.parent->reverse ? elem.next : elem.prev;
     }
 
+    Index& Next(Index city) {
+        auto& elem = elements[city];
+        return elem.parent->reverse ? elem.prev : elem.next;
+    }
+
+    Index& Prev(Index city) {
+        auto& elem = elements[city];
+        return elem.parent->reverse ? elem.next : elem.prev;
+    }
+
     Index Advance(Index city, Count count) const {
         for (auto i = 0; i < count; ++i) {
             city = Next(city);
         }
         return city;
+    }
+
+    Count CountBetween(Index a, Index b) const {
+        Count count = 1;
+        while (a != b) {
+            ++count;
+            a = Next(a);
+        }
+        return count;
     }
 
     bool Between(Index a, Index b, Index c) const {
@@ -139,31 +160,60 @@ public:
             swap(a_p, b_p);
         }
 
-        // reverse in between of two parents
-        // a_p != b_p
-        if (auto a_next = std::next(a_p); a_next != b_p) {
-            Reverse(a_next, std::prev(b_p));
+        bool a_partial = true;
+        bool b_partial = true;
+
+        // can't be the same
+        auto a_next = std::next(a_p);
+        if (seg_begin(a_p) == a) {
+            a_next = a_p;
+            a_partial = false;
+        }
+        auto b_prev = std::prev(b_p);
+        if (seg_end(b_p) == b) {
+            b_prev = b_p;
+            b_partial = false;
         }
 
-        // exactly peace I need to write
+        // reverse in between of two parents
+        // a_p != b_p
+        if (a_next->pos <= b_prev->pos) {
+            Println(cout, "reverse in between");
+            Reverse(a_next, std::next(b_prev));
+        }
 
-//        // now time to handle whatever is in between
-//
-//        auto ListSwap = [&](list<Parent>::iterator it_1, list<Parent>::iterator it_2) {
-//            auto ins_it_1 = next(it_2);
-//            parents.splice(it_1, parents, it_2);
-//            parents.splice(ins_it_1, parents, it_1);
-//        };
-//
-//        // don't have the same parent
-//
-//        ListSwap(a_p, b_p);
-//
-//        // be careful as it can go out of bounds
-//        for (auto p = std::next(a_p); p != b_p; ++p) {
-//            p->reverse = !p->reverse;
-//        }
-//        // same
+        if (a_partial && b_partial) {
+            auto [a_p_1, a_p_2] = SplitAt(a);
+            auto [b_p_1, b_p_2] = SplitAt(b);
+
+            Reverse(a_p_2, std::next(a_p_2));
+            Reverse(b_p_1, b_p_2);
+
+            Move(b_p_1, a_p_2);
+            Move(a_p_2, b_p_2);
+
+            TryMergeSides(a_p_1);
+            TryMergeSides(b_p_2);
+            return;
+        }
+
+        if (a_partial) {
+            auto [a_p_1, a_p_2] = SplitAt(a);
+            Reverse(a_p_2, a_next);
+            Move(a_p_2, NextParent(b_prev));
+
+            TryMergeSides(a_p_1);
+            return;
+        }
+
+        if (b_partial) {
+            auto [b_p_1, b_p_2] = SplitAt(b);
+            Reverse(b_p_1, b_p_2);
+            Move(b_p_1, a_next);
+
+            TryMergeSides(b_p_2);
+            return;
+        }
     }
 
     void Reverse() {
@@ -184,6 +234,13 @@ public:
     }
 
 private:
+    Index& seg_begin(ParentIt it) {
+        return it->reverse ? it->segEnd : it->segBegin;
+    }
+
+    Index& seg_end(ParentIt it) {
+        return it->reverse ? it->segBegin : it->segEnd;
+    }
 
     template<class Func>
     void ForEach(list<Parent>::const_iterator parent, Func&& func) const {
@@ -226,6 +283,8 @@ private:
         p.reverse = !p.reverse;
     }
 
+    // use SplitAt, change signature to give bool, iterator if new element created
+    // make it optional even
     void ReverseSameParent(Index a, Index b) {
         assert(elements[a].parent == elements[b].parent);
 
@@ -237,7 +296,7 @@ private:
         if (p.segBegin == a) p.segBegin = b;
         if (p.segEnd == b) p.segEnd = a;
 
-        while (a != b) {
+        while (elements[a].segPos < elements[b].segPos) {
             auto a_next = Next(a);
             auto b_prev = Prev(b);
 
@@ -260,24 +319,25 @@ private:
         }
     }
 
-    void SplitOversized(std::list<Parent>::iterator parent) {
+    std::array<std::list<Parent>::iterator, 2> SplitAt(Index a) {
+        std::list<Parent>::iterator parent = elements[a].parent;
         auto& p = *parent;
-        if (p.sz <= sz_bound) return;
 
         Dereverse(parent);
 
-        auto new_size = p.sz / 2;
-        p.sz -= new_size;
-        auto new_seg_begin = Advance(p.segBegin, p.sz);
+        auto new_seg_begin = a;
         auto new_seg_end = p.segEnd;
         p.segEnd = Prev(new_seg_begin);
-        // have to create new guy
+        auto new_size = CountBetween(a, new_seg_end);
+        p.sz -= new_size;
+
+        Println(cout, "new size", new_size, " ", a, " ", new_seg_end);
+
         auto new_parent = parents.emplace(std::next(parent), false, p.pos+1, new_seg_begin, new_seg_end, new_size);
         for_each(std::next(new_parent), parents.end(), [](auto& p) {
             p.pos += 2;
         });
 
-        // reset setPos and parent for elements
         ForEach(new_seg_begin, new_seg_end, [&, pos=0](auto city) mutable {
             auto& el = elements[city];
             el.segPos = pos++;
@@ -285,82 +345,112 @@ private:
 
             Println(cout, pos);
         });
+
+        return {parent, new_parent};
     }
 
+    void SplitOversized(std::list<Parent>::iterator parent) {
+        auto& p = *parent;
+        if (p.sz <= sz_bound) return;
 
-    // somehow need to insert after
+        Println(cout, "SplitOversized ", p.sz);
 
-    // have added to new segments to the thing.
-    void Split(Index a, Index b) {
-        list<Parent>::iterator a_p = elements[a].parent;
-//        auto a_pos = elements[a].segPos;
-        Parent a_new = *a_p;
-        a_p->segEnd = elements[a].prev;
-        a_new.segBegin = a;
-        parents.insert(std::next(a_p), a_new);
-        // for a_new items have to reinitialize their parent and segPos
+        Dereverse(parent);
 
-        list<Parent>::iterator b_p = elements[b].parent;
-//        auto b_pos = elements[b].segPos;
-        Parent b_new = *b_p;
-        b_p->segEnd = b;
-        b_new.segBegin = elements[b].next;
-        parents.insert(std::next(b_p), b_new);
-        // for b_new items have to reinitialize their parent and segPos
-
+        auto new_size = p.sz / 2;
+        auto new_seg_begin = Advance(p.segBegin, p.sz - new_size);
+        SplitAt(new_seg_begin);
     }
 
-    // can get parents out of a and b
-    void InterParentReverse(list<Parent>::iterator a_p, list<Parent>::iterator b_p, Index a, Index b) {
-        // doesn't matter if I do it now or later as it doesn't involve things much...
-        std::for_each(a_p, b_p, [](auto& p) {
-            p.reverse = !p.reverse;
-        });
-        std::reverse(a_p, b_p);
+    void Move(std::list<Parent>::iterator from, std::list<Parent>::iterator to) {
+        Println(cout, "Move");
 
-        // have to know if this next element parent reversed or not...
-        // lets imagine reverse doesn't exist
-        auto& el_a = elements[a];
-        auto& el_b = elements[b];
+        // extract from
+        {
+            // avoid using Prev / Next Parent
+             Next(Prev(seg_begin(from))) = Next(seg_end(from));
+             Prev(Next(seg_end(from))) = Prev(seg_begin(from));
 
-        elements[el_a.prev].next = b;
-        elements[el_b.next].prev = a;
-
-        // importance of reverse, we clearly initialize a_prev but this on got reversed
-        // be careful that you can override values by mistake.
-        el_a.next = el_b.next;
-        el_b.prev = el_a.prev;
-    }
-
-    // now we need to merge if needed and split again... back everything + give parents new positions
-    void Merge(list<Parent>::iterator a_p, list<Parent>::iterator b_p) {
-
-        if (a_p->sz < sz_bound) {
-            Merge(a_p, std::next(a_p));
-            // while merging
-
-            // after successful merge try to split...
-            // if split successful move to next item,
-            // else move to next item anyway
-            // put this item to the list
+//            auto prev = PrevParent(from);
+//            auto next = NextParent(from);
+//
+//            Next(seg_end(prev)) = seg_begin(next);
+//            Prev(seg_begin(next)) = seg_end(prev);
         }
-        // just check one more next that should correspond to a_p->next from the stert
+        // insert before to
+        {
+            auto prev = PrevParent(to);
+            auto next = to;
+            if (next == parents.end()) next = parents.begin();
 
-        // do the same procedure with b_p
+            Next(seg_end(prev)) = seg_begin(from);
+            Prev(seg_begin(from)) = seg_end(prev);
+
+            Prev(seg_begin(next)) = seg_end(from);
+            Next(seg_end(from)) = seg_begin(next);
+        }
+
+        parents.splice(to, parents, from);
+        ReindexParents();
     }
 
-    void MergeNext(list<Parent>::iterator p) {
-        // figure out who's less and derive to one reverse bit
-        // then merge in one element, will have to again reassign items parent and segPos
-        // and update fields :
-//        Index segBegin;
-//        Index segEnd;
-//        Count sz;
-
+    ParentIt PrevParent(ParentIt it) {
+        return std::prev(it == parents.begin() ? parents.end() : it);
     }
 
+    ParentIt NextParent(ParentIt it) {
+        auto next = std::next(it);
+        if (next == parents.end()) return parents.begin();
+        return next;
+    }
 
-    // now it's all done.
+    void ReindexParents() {
+        Index index = 0;
+        for (auto& p : parents) {
+            p.pos = index++;
+        }
+    }
+
+    void TryMergeSides(ParentIt it) {
+        ParentIt prev, next;
+        while (it != parents.begin() && (prev = std::prev(it))->sz + it->sz <= sz_bound) it = MergeAdjacent(prev, it);
+        while ((next = std::next(it)) != parents.end() && next->sz + it->sz <= sz_bound) it = MergeAdjacent(it, next);
+    }
+
+    ParentIt MergeAdjacent(ParentIt left, ParentIt right) {
+        if (left->sz == 0) {
+            parents.erase(left);
+            ReindexParents();
+            return right;
+        }
+
+        if (right->sz == 0) {
+            parents.erase(right);
+            ReindexParents();
+            return left;
+        }
+
+        if (left->reverse != right->reverse) {
+            Reverse(right, std::next(right));
+        }
+
+        ForEach(right, [&, pos=left->sz](auto city) mutable {
+            auto& el = elements[city];
+            el.segPos = pos++;
+            el.parent = left;
+
+            Println(cout, pos);
+        });
+
+        left->sz += right->sz;
+        seg_end(left) = seg_end(right);
+
+        parents.erase(right);
+
+        ReindexParents();
+        return left;
+    }
+
 
     friend std::ostream& operator<<(std::ostream& out, const TwoLevelTreeTour& tour);
 };
