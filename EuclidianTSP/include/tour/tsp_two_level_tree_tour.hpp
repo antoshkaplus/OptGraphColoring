@@ -14,7 +14,6 @@ class TwoLevelTreeTour {
         Index segEnd;
         Count sz;
 
-
         Parent() = default;
         Parent(bool reverse, Index pos, Index segBegin, Index segEnd, Count sz)
         : reverse(reverse), pos(pos), segBegin(segBegin), segEnd(segEnd), sz(sz) {}
@@ -36,11 +35,13 @@ class TwoLevelTreeTour {
 
     Count sz_bound;
 
+    using ConstParentIt = std::list<Parent>::const_iterator;
     using ParentIt = std::list<Parent>::iterator;
 
 public:
     TwoLevelTreeTour(Count city_count) {
-        sz_bound = static_cast<Count>(sqrt(city_count));
+        // TODO solve this issue with checking if a == b 
+        sz_bound = max(2, static_cast<Count>(sqrt(city_count)));
 
         parents.emplace_back(false, 0, 0, city_count-1, city_count);
 
@@ -160,71 +161,65 @@ public:
             swap(a_p, b_p);
         }
 
-        bool a_partial = true;
-        bool b_partial = true;
+        auto a_p_2 = SplitAt_2(a);
+        auto a_next = a_p_2 ? a_p_2.value() : a_p;
 
-        // can't be the same
-        auto a_next = std::next(a_p);
-        if (seg_begin(a_p) == a) {
-            a_next = a_p;
-            a_partial = false;
-        }
-        auto b_prev = std::prev(b_p);
-        if (seg_end(b_p) == b) {
-            b_prev = b_p;
-            b_partial = false;
-        }
+        SplitAt_2(Next(b));
+        auto b_next = b_p;
 
-        // reverse in between of two parents
-        // a_p != b_p
-        if (a_next->pos <= b_prev->pos) {
-            Println(cout, "reverse in between");
-            Reverse(a_next, std::next(b_prev));
-        }
+        Reverse(a_next, b_next);
+        TryMergeSides(a_p);
+        TryMergeSides(elements[b].parent);
 
-        if (a_partial && b_partial) {
-            auto [a_p_1, a_p_2] = SplitAt(a);
-            auto [b_p_1, b_p_2] = SplitAt(b);
-
-            Reverse(a_p_2, std::next(a_p_2));
-            Reverse(b_p_1, b_p_2);
-
-            Move(b_p_1, a_p_2);
-            Move(a_p_2, b_p_2);
-
-            TryMergeSides(a_p_1);
-            TryMergeSides(b_p_2);
-            return;
-        }
-
-        if (a_partial) {
-            auto [a_p_1, a_p_2] = SplitAt(a);
-            Reverse(a_p_2, a_next);
-            Move(a_p_2, NextParent(b_prev));
-
-            TryMergeSides(a_p_1);
-            return;
-        }
-
-        if (b_partial) {
-            auto [b_p_1, b_p_2] = SplitAt(b);
-            Reverse(b_p_1, b_p_2);
-            Move(b_p_1, a_next);
-
-            TryMergeSides(b_p_2);
-            return;
-        }
+//
+//        // reverse in between of two parents
+//        // a_p != b_p
+//        if (a_next->pos <= b_prev->pos) {
+//            Println(cout, "reverse in between");
+//            Reverse(a_next, std::next(b_prev));
+//        }
+//
+//
+//
+//
+//        if (a_p_2 && b_p_2) {
+//
+//            Reverse(a_p_2, std::next(a_p_2));
+//            Reverse(b_p_1, b_p_2);
+//
+//            Move(b_p_1, a_p_2);
+//            Move(a_p_2, b_p_2);
+//
+//            TryMergeSides(a_p_1);
+//            TryMergeSides(b_p_2);
+//            return;
+//        }
+//
+//        if (a_p_2) {
+//            Reverse(a_p_2, a_next);
+//            Move(a_p_2, NextParent(b_prev));
+//
+//            TryMergeSides(a_p_1);
+//            return;
+//        }
+//
+//        if (b_p_2) {
+//            Reverse(b_p_1, b_p_2);
+//            Move(b_p_1, a_next);
+//
+//            TryMergeSides(b_p_2);
+//            return;
+//        }
     }
 
     void Reverse() {
-        Reverse(parents.begin(), parents.end());
+        Reverse(parents.begin(), std::prev(parents.end()));
     }
 
     std::vector<Index> Order() const {
         std::vector<Index> order;
         order.reserve(elements.size());
-        auto& p = parents.front();
-        auto a = p.reverse ? p.segEnd : p.segBegin;
+        auto a = seg_begin(parents.begin());
         auto b = a;
         order.push_back(b);
         while (a != (b = Next(b))) {
@@ -234,6 +229,10 @@ public:
     }
 
 private:
+    Index seg_begin(ConstParentIt it) const {
+        return it->reverse ? it->segEnd : it->segBegin;
+    }
+
     Index& seg_begin(ParentIt it) {
         return it->reverse ? it->segEnd : it->segBegin;
     }
@@ -259,10 +258,29 @@ private:
         }
     }
 
-    void Reverse(list<Parent>::iterator first, list<Parent>::iterator last) {
+    void Reverse(ParentIt a) {
+        a->reverse = !a->reverse;
+    }
+
+    // TODO requires more testing
+    void Reverse(ParentIt p_a, ParentIt p_b) {
+        if (p_a == p_b) Reverse(p_a);
+
+        auto last = std::next(p_b);
+
+        auto a = seg_begin(p_a);
+        auto prev_a = Prev(a);
+        auto b = seg_end(p_b);
+        auto next_b = Next(b);
+
+        Next(prev_a) = b;
+        Prev(a) = next_b;
+        Prev(next_b) = a;
+        Next(b) = prev_a;
+
         std::list<Parent> tmp;
-        auto pos = first->pos;
-        tmp.splice(tmp.begin(), parents, first, last);
+        auto pos = p_a->pos;
+        tmp.splice(tmp.begin(), parents, p_a, last);
         tmp.reverse();
         for (auto& item : tmp) {
             item.pos = pos++;
@@ -278,27 +296,11 @@ private:
 
         if (!p.reverse) return;
 
-        ReverseSameParent(p.segBegin, p.segEnd);
-        swap(p.segBegin, p.segEnd);
-        p.reverse = !p.reverse;
-    }
-
-    // use SplitAt, change signature to give bool, iterator if new element created
-    // make it optional even
-    void ReverseSameParent(Index a, Index b) {
-        assert(elements[a].parent == elements[b].parent);
-
-        if (elements[a].segPos > elements[b].segPos) {
-            swap(a, b);
-        }
-
-        auto& p = *elements[a].parent;
-        if (p.segBegin == a) p.segBegin = b;
-        if (p.segEnd == b) p.segEnd = a;
-
-        while (elements[a].segPos < elements[b].segPos) {
-            auto a_next = Next(a);
-            auto b_prev = Prev(b);
+        auto a = parent->segBegin;
+        auto b = parent->segEnd;
+        for (auto i = 0; i < p.sz/2; ++i) {
+            auto a_next = elements[a].next;
+            auto b_prev = elements[b].prev;
 
             auto& el_a = elements[a];
             auto& el_b = elements[b];
@@ -317,6 +319,28 @@ private:
             a = a_next;
             b = b_prev;
         }
+
+        swap(p.segBegin, p.segEnd);
+        parent->reverse = false;
+
+        int i = 0;
+        i++;
+    }
+
+    void ReverseSameParent(Index a, Index b) {
+        assert(elements[a].parent == elements[b].parent);
+
+        ParentIt p = elements[a].parent;
+        if ((!p->reverse && elements[a].segPos > elements[b].segPos) ||
+            (p->reverse && elements[a].segPos < elements[b].segPos)) {
+            swap(a, b);
+        }
+
+        auto a_p = SplitAt_2(a);
+        SplitAt_2(Next(b));
+
+        Reverse(a_p ? a_p.value() : p);
+        TryMergeSides(p);
     }
 
     std::array<std::list<Parent>::iterator, 2> SplitAt(Index a) {
@@ -349,6 +373,40 @@ private:
         return {parent, new_parent};
     }
 
+    std::experimental::optional<ParentIt> SplitAt_2(Index a) {
+        auto parent = elements[a].parent;
+        // also works if a single element
+
+        if (seg_begin(parent) == a) {
+            return {};
+        }
+
+        auto& p = *parent;
+
+        Dereverse(parent);
+
+        auto new_seg_begin = a;
+        auto new_seg_end = p.segEnd;
+        // exists by condition earlier
+        p.segEnd = elements[new_seg_begin].prev;
+        auto new_size = CountBetween(a, new_seg_end);
+        p.sz -= new_size;
+
+        auto new_parent = parents.emplace(std::next(parent), false, p.pos+1, new_seg_begin, new_seg_end, new_size);
+        for_each(std::next(new_parent), parents.end(), [](auto& p) {
+            p.pos += 2;
+        });
+
+        ForEach(new_seg_begin, new_seg_end, [&, pos=0](auto city) mutable {
+            auto& el = elements[city];
+            el.segPos = pos++;
+            el.parent = new_parent;
+
+        });
+
+        return {new_parent};
+    }
+
     void SplitOversized(std::list<Parent>::iterator parent) {
         auto& p = *parent;
         if (p.sz <= sz_bound) return;
@@ -359,7 +417,8 @@ private:
 
         auto new_size = p.sz / 2;
         auto new_seg_begin = Advance(p.segBegin, p.sz - new_size);
-        SplitAt(new_seg_begin);
+
+        SplitAt_2(new_seg_begin);
     }
 
     void Move(std::list<Parent>::iterator from, std::list<Parent>::iterator to) {
@@ -411,27 +470,35 @@ private:
         }
     }
 
+    // invalidates previously used iterators
     void TryMergeSides(ParentIt it) {
+        if (it == parents.end()) return;
+
         ParentIt prev, next;
         while (it != parents.begin() && (prev = std::prev(it))->sz + it->sz <= sz_bound) it = MergeAdjacent(prev, it);
         while ((next = std::next(it)) != parents.end() && next->sz + it->sz <= sz_bound) it = MergeAdjacent(it, next);
     }
 
     ParentIt MergeAdjacent(ParentIt left, ParentIt right) {
+        assert(right != parents.end());
+
         if (left->sz == 0) {
+            assert(false);
             parents.erase(left);
             ReindexParents();
             return right;
         }
 
         if (right->sz == 0) {
+            assert(false);
             parents.erase(right);
             ReindexParents();
             return left;
         }
 
         if (left->reverse != right->reverse) {
-            Reverse(right, std::next(right));
+            if (left->reverse) Dereverse(left);
+            else Dereverse(right);
         }
 
         ForEach(right, [&, pos=left->sz](auto city) mutable {
@@ -444,6 +511,9 @@ private:
 
         left->sz += right->sz;
         seg_end(left) = seg_end(right);
+
+        assert(right != parents.end());
+        assert(left != right);
 
         parents.erase(right);
 
@@ -460,7 +530,10 @@ std::ostream& operator<<(std::ostream& out, const TwoLevelTreeTour& tour) {
     for (auto it = ps.begin(); it != ps.end(); ++it) {
         out << "[";
         tour.ForEach(it, [&](auto city) {
-            out << city << ",";
+            out << city << "(" << tour.Prev(city) << "," << tour.Next(city) << ")" << ",";
+            cout << it->sz << " " << tour.elements[city].parent->sz;
+            assert(tour.parents.begin() == tour.elements[city].parent);
+            assert(it == tour.elements[city].parent);
         });
         out << "]";
     }
