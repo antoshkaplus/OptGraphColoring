@@ -24,7 +24,8 @@ target_link_libraries(EuclidianTSP ${ARMA_LIBRARY} ${ANT_LIBRARY})
 add_executable(TSP_BM app/benchmark.cpp)
 target_link_libraries(TSP_BM benchmark pthread ${ARMA_LIBRARY})
 
-add_executable(TSP_TEST app/test.cpp)
+file(GLOB_RECURSE BUILD_FILES "./test/*.cpp")
+add_executable(TSP_TEST ${BUILD_FILES})
 target_link_libraries(TSP_TEST gtest pthread)
 
 # methods
