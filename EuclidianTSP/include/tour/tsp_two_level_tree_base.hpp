@@ -3,56 +3,56 @@
 #include "tsp_util.hpp"
 
 
-class TwoLevelTreeBase;
-
-class Parent {
-    // segment should be traversed in forward or reverse direction
-    bool reverse;
-    // parent position, used to define order among elements
-    Index pos;
-    Index segBegin;
-    Index segEnd;
-    Count sz;
-
-    Parent() = default;
-    Parent(bool reverse, Index pos, Index segBegin, Index segEnd, Count sz)
-            : reverse(reverse), pos(pos), segBegin(segBegin), segEnd(segEnd), sz(sz) {
-
-        if (reverse) swap(this->segBegin, this->segEnd);
-    }
-
-public:
-    Count size() const {
-        return sz;
-    }
-
-    bool position() const {
-        return pos;
-    }
-
-    friend class TwoLevelTreeBase;
-};
-
-class SegElement {
-    list<Parent>::iterator parent;
-    Index prev;
-    Index next;
-    // position inside the segment, used to define order among elements
-    Index segPos;
-
-    friend class TwoLevelTreeBase;
-};
-
+// another solution would be to have a special wrapper and
+// expose this wrapper to the user instead of Parent iterator
 class TwoLevelTreeBase {
-    // TODO investigate possibility of using a vector
-    // will need to use list for this
+
+    class Parent {
+        // segment should be traversed in forward or reverse direction
+        bool reverse;
+        // parent position, used to define order among elements
+        Index pos;
+        Index segBegin;
+        Index segEnd;
+        Count sz;
+
+        Parent() = default;
+        Parent(bool reverse, Index pos, Index segBegin, Index segEnd, Count sz)
+                : reverse(reverse), pos(pos), segBegin(segBegin), segEnd(segEnd), sz(sz) {
+
+            if (reverse) swap(this->segBegin, this->segEnd);
+        }
+
+    public:
+        Count size() const {
+            return sz;
+        }
+
+        Index position() const {
+            return pos;
+        }
+
+        friend class TwoLevelTreeBase;
+    };
+
+    struct SegElement {
+        list<Parent>::iterator parent;
+        Index prev;
+        Index next;
+        // position inside the segment, used to define order among elements
+        // doesn't have have to start from 0
+        Index segPos;
+    };
+
+
     std::list<Parent> parents;
     // index is a city
     std::vector<SegElement> elements;
 
-    using ConstParentIt = std::list<Parent>::const_iterator;
 public:
     using ParentIt = std::list<Parent>::iterator;
+    using ConstParentIt = std::list<Parent>::const_iterator;
+
 
     TwoLevelTreeBase(Count count) {
         parents.emplace_back(Parent{false, 0, 0, count-1, count});
@@ -119,14 +119,14 @@ public:
         return it->reverse ? it->segBegin : it->segEnd;
     }
 
-    bool in_seg_order(Index a, Index b) const {
+    bool seg_ordered(Index a, Index b) const {
         auto a_p = elements[a].parent;
         auto b_p = elements[b].parent;
 
-        if (a_p != b_p) throw std::invalid_argument("have to have the same parent");
+        if (a_p != b_p) return a_p->pos < b_p->pos;
 
-        return (!a_p->reverse && elements[a].segPos < elements[b].segPos) ||
-               (b_p->reverse && elements[a].segPos > elements[b].segPos);
+        return (!a_p->reverse && elements[a].segPos <= elements[b].segPos) ||
+               (a_p->reverse && elements[a].segPos >= elements[b].segPos);
     }
 
     bool Between(Index a, Index b, Index c) const {
@@ -173,11 +173,14 @@ public:
     }
 
     void Reverse(ParentIt p) {
-        ReverseBounds(p, p);
-        p->reverse = !p->reverse;
+        Reverse(p, p);
     }
 
     ParentIt parent(Index city) {
+        return elements[city].parent;
+    }
+
+    ConstParentIt parent(Index city) const {
         return elements[city].parent;
     }
 
@@ -194,7 +197,6 @@ public:
     }
 
     void Reverse(ParentIt p_a, ParentIt p_b) {
-        if (p_a == p_b) Reverse(p_a);
 
         ReverseBounds(p_a, p_b);
 
@@ -219,7 +221,14 @@ public:
     }
 
     template<class Func>
-    void ForEach(list<Parent>::const_iterator parent, Func&& func) const {
+    void ForEachParent(Func&& func) {
+        for (auto it = parents.begin(); it != parents.end(); ++it) {
+            func(it);
+        }
+    }
+
+    template<class Func>
+    void ForEach(ConstParentIt parent, Func&& func) const {
         ForEach(seg_begin(parent), seg_end(parent), func);
     }
 
@@ -234,7 +243,7 @@ public:
 
     // does not modify state of object
     // changes representation
-    void Dereverse(list<Parent>::iterator parent) {
+    void Dereverse(ParentIt parent) {
         auto& p = *parent;
 
         if (!p.reverse) return;
@@ -274,10 +283,8 @@ public:
         auto new_parent = parents.emplace(std::next(parent), Parent{parent->reverse, parent->pos+1, new_seg_begin, new_seg_end, new_size});
         ReindexParents(new_parent);
 
-        ForEach(new_seg_begin, new_seg_end, [&, pos=0](auto city) mutable {
-            auto& el = elements[city];
-            el.segPos = pos++;
-            el.parent = new_parent;
+        ForEach(new_parent, [&](auto city) mutable {
+            elements[city].parent = new_parent;
         });
 
         return {new_parent};
@@ -292,14 +299,10 @@ public:
             else Dereverse(right);
         }
 
-        ForEach(right, [&, pos=left->sz](auto city) mutable {
-            auto& el = elements[city];
-            el.segPos = pos++;
-            el.parent = left;
-        });
-
         left->sz += right->sz;
         seg_end(left) = seg_end(right);
+
+        ResetParent(left);
 
         parents.erase(right);
 
@@ -340,6 +343,22 @@ private:
     void ReindexParents(ParentIt source) {
         for_each(std::next(source), parents.end(), [pos=source->pos](auto& p) mutable {
             p.pos = ++pos;
+        });
+    }
+
+    void ResetParent(ParentIt p) {
+        auto pos = 0;
+        auto diff = 1;
+        if (p->reverse) {
+            pos = p->sz-1;
+            diff = -1;
+        }
+
+        ForEach(p, [&](auto city) {
+            auto& el = elements[city];
+            el.segPos = pos;
+            el.parent = p;
+            pos += diff;
         });
     }
 

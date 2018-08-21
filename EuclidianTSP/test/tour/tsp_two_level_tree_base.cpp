@@ -1,33 +1,5 @@
 
-#include <gtest/gtest.h>
-
-#include "tour/tsp_two_level_tree_base.hpp"
-
-
-void CheckParentSync(const TwoLevelTreeBase& base) {
-    Index i = 0;
-    base.ForEachParent([&](auto it) {
-        ASSERT_EQ(i++, it->position());
-        auto count = 0;
-        base.ForEach(it, [&](auto city) {
-            ++count;
-            ASSERT_EQ(base.parent(city), it) << base;
-        });
-        ASSERT_EQ(count, it->size());
-    });
-}
-
-auto Sequence(Count city_count) {
-    std::vector<Index> vs(city_count);
-    iota(vs.begin(), vs.end(), 0);
-    return vs;
-}
-
-void Check(const TwoLevelTreeBase& base, const vector<Index>& expected_order) {
-    CheckParentSync(base);
-    ASSERT_EQ(base.Order(), expected_order) << base;
-}
-
+#include "test/tour/tsp_two_level_tree.hpp"
 
 
 TEST(TwoLevelTreeBase, Constructor) {
