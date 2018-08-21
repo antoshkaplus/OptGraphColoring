@@ -3,7 +3,9 @@
 #include "tsp_util.hpp"
 
 
-struct Parent {
+class TwoLevelTreeBase;
+
+class Parent {
     // segment should be traversed in forward or reverse direction
     bool reverse;
     // parent position, used to define order among elements
@@ -14,18 +16,34 @@ struct Parent {
 
     Parent() = default;
     Parent(bool reverse, Index pos, Index segBegin, Index segEnd, Count sz)
-            : reverse(reverse), pos(pos), segBegin(segBegin), segEnd(segEnd), sz(sz) {}
+            : reverse(reverse), pos(pos), segBegin(segBegin), segEnd(segEnd), sz(sz) {
+
+        if (reverse) swap(this->segBegin, this->segEnd);
+    }
+
+public:
+    Count size() const {
+        return sz;
+    }
+
+    bool position() const {
+        return pos;
+    }
+
+    friend class TwoLevelTreeBase;
 };
 
-struct SegElement {
+class SegElement {
     list<Parent>::iterator parent;
     Index prev;
     Index next;
     // position inside the segment, used to define order among elements
     Index segPos;
+
+    friend class TwoLevelTreeBase;
 };
 
-struct TwoLevelTreeBase {
+class TwoLevelTreeBase {
     // TODO investigate possibility of using a vector
     // will need to use list for this
     std::list<Parent> parents;
@@ -33,11 +51,11 @@ struct TwoLevelTreeBase {
     std::vector<SegElement> elements;
 
     using ConstParentIt = std::list<Parent>::const_iterator;
+public:
     using ParentIt = std::list<Parent>::iterator;
 
-public:
     TwoLevelTreeBase(Count count) {
-        parents.emplace_back(false, 0, 0, count-1, count);
+        parents.emplace_back(Parent{false, 0, 0, count-1, count});
 
         elements.resize(count);
         for (auto i = 0; i < count; ++i) {
@@ -101,6 +119,59 @@ public:
         return it->reverse ? it->segBegin : it->segEnd;
     }
 
+    bool in_seg_order(Index a, Index b) const {
+        auto a_p = elements[a].parent;
+        auto b_p = elements[b].parent;
+
+        if (a_p != b_p) throw std::invalid_argument("have to have the same parent");
+
+        return (!a_p->reverse && elements[a].segPos < elements[b].segPos) ||
+               (b_p->reverse && elements[a].segPos > elements[b].segPos);
+    }
+
+    bool Between(Index a, Index b, Index c) const {
+        auto a_p = elements[a].parent;
+        auto b_p = elements[b].parent;
+        auto c_p = elements[c].parent;
+
+        if (a_p == b_p && b_p == c_p) {
+
+            auto sp_a = elements[a].segPos;
+            auto sp_b = elements[b].segPos;
+            auto sp_c = elements[c].segPos;
+
+            return (!a_p->reverse && ((sp_a < sp_b && sp_b < sp_c) ||
+                                      (sp_c < sp_a && sp_a < sp_b) ||
+                                      (sp_b < sp_c && sp_c < sp_a))) ||
+                   (a_p->reverse && ((sp_c < sp_b && sp_b < sp_a) ||
+                                     (sp_b < sp_a && sp_a < sp_c) ||
+                                     (sp_a < sp_c && sp_c < sp_b)));
+        }
+
+        if (a_p == b_p) {
+            return (a_p->reverse && elements[b].segPos < elements[a].segPos) ||
+                   (!a_p->reverse && elements[a].segPos < elements[b].segPos);
+
+        }
+
+        if (a_p == c_p) {
+            return (c_p->reverse && elements[a].segPos < elements[c].segPos) ||
+                   (!c_p->reverse && elements[c].segPos < elements[a].segPos);
+
+        }
+
+        if (b_p == c_p) {
+            return (b_p->reverse && elements[c].segPos < elements[b].segPos) ||
+                   (!b_p->reverse && elements[b].segPos < elements[c].segPos);
+        }
+
+        // all are distinct
+        // reverse bit doesn't count
+        return (a_p->pos < b_p->pos && b_p->pos < c_p->pos) ||
+               (c_p->pos < a_p->pos && a_p->pos < b_p->pos) ||
+               (b_p->pos < c_p->pos && c_p->pos < a_p->pos);
+    }
+
     void Reverse(ParentIt p) {
         ReverseBounds(p, p);
         p->reverse = !p->reverse;
@@ -108,6 +179,18 @@ public:
 
     ParentIt parent(Index city) {
         return elements[city].parent;
+    }
+
+    Count parent_count() const {
+        return parents.size();
+    }
+
+    ParentIt parent_begin() {
+        return parents.begin();
+    }
+
+    ParentIt parent_end() {
+        return parents.end();
     }
 
     void Reverse(ParentIt p_a, ParentIt p_b) {
@@ -126,6 +209,13 @@ public:
             item.reverse = !item.reverse;
         }
         parents.splice(last, tmp);
+    }
+
+    template<class Func>
+    void ForEachParent(Func&& func) const {
+        for (auto it = parents.begin(); it != parents.end(); ++it) {
+            func(it);
+        }
     }
 
     template<class Func>
@@ -149,35 +239,20 @@ public:
 
         if (!p.reverse) return;
 
-        auto a = parent->segBegin;
-        auto b = parent->segEnd;
-        for (auto i = 0; i < p.sz/2; ++i) {
-            auto a_next = elements[a].next;
-            auto b_prev = elements[b].prev;
+        auto a = p.segBegin;
 
-            auto& el_a = elements[a];
-            auto& el_b = elements[b];
+        for (auto new_pos = p.sz-1; new_pos >= 0; --new_pos) {
+            auto& el = elements[a];
+            auto a_next = el.next;
 
-            swap(el_a.segPos, el_b.segPos);
-
-            elements[el_a.next].prev = b;
-            elements[el_a.prev].next = b;
-
-            elements[el_b.next].prev = a;
-            elements[el_b.prev].next = a;
-
-            swap(el_a.next, el_b.next);
-            swap(el_a.prev, el_b.prev);
+            swap(el.next, el.prev);
+            el.segPos = new_pos;
 
             a = a_next;
-            b = b_prev;
         }
 
         swap(p.segBegin, p.segEnd);
-        parent->reverse = false;
-
-        int i = 0;
-        i++;
+        p.reverse = false;
     }
 
     std::experimental::optional<ParentIt> SplitAt_2(Index a) {
@@ -188,40 +263,30 @@ public:
             return {};
         }
 
-        auto& p = *parent;
-
-        Dereverse(parent);
-
         auto new_seg_begin = a;
-        auto new_seg_end = p.segEnd;
+        auto new_seg_end = seg_end(parent);
         // exists by condition earlier
-        p.segEnd = elements[new_seg_begin].prev;
-        auto new_size = CountBetween(a, new_seg_end);
-        p.sz -= new_size;
+        seg_end(parent) = Prev(a);
 
-        auto new_parent = parents.emplace(std::next(parent), false, p.pos+1, new_seg_begin, new_seg_end, new_size);
-        for_each(std::next(new_parent), parents.end(), [](auto& p) {
-            p.pos += 2;
-        });
+        auto new_size = CountBetween(new_seg_begin, new_seg_end);
+        parent->sz -= new_size;
+
+        auto new_parent = parents.emplace(std::next(parent), Parent{parent->reverse, parent->pos+1, new_seg_begin, new_seg_end, new_size});
+        ReindexParents(new_parent);
 
         ForEach(new_seg_begin, new_seg_end, [&, pos=0](auto city) mutable {
             auto& el = elements[city];
             el.segPos = pos++;
             el.parent = new_parent;
-
         });
 
         return {new_parent};
     }
 
-    void ReindexParents() {
-        Index index = 0;
-        for (auto& p : parents) {
-            p.pos = index++;
-        }
-    }
+    ParentIt MergeRight(ParentIt left) {
+        auto right = std::next(left);
+        if (right == parents.end()) return left;
 
-    ParentIt MergeAdjacent(ParentIt left, ParentIt right) {
         if (left->reverse != right->reverse) {
             if (left->reverse) Dereverse(left);
             else Dereverse(right);
@@ -231,8 +296,6 @@ public:
             auto& el = elements[city];
             el.segPos = pos++;
             el.parent = left;
-
-            Println(cout, pos);
         });
 
         left->sz += right->sz;
@@ -240,7 +303,7 @@ public:
 
         parents.erase(right);
 
-        ReindexParents();
+        ReindexParents(left);
         return left;
     }
 
@@ -274,16 +337,21 @@ private:
         }
     }
 
+    void ReindexParents(ParentIt source) {
+        for_each(std::next(source), parents.end(), [pos=source->pos](auto& p) mutable {
+            p.pos = ++pos;
+        });
+    }
+
     friend std::ostream& operator<<(std::ostream& out, const TwoLevelTreeBase& base);
 };
 
-inline std::ostream& operator<<(std::ostream& out, const TwoLevelTreeBase& tour) {
-    auto& ps = tour.parents;
+inline std::ostream& operator<<(std::ostream& out, const TwoLevelTreeBase& base) {
+    auto& ps = base.parents;
     for (auto it = ps.begin(); it != ps.end(); ++it) {
         out << "[";
-        tour.ForEach(it, [&](auto city) {
-            out << city << "(" << tour.Prev(city) << "," << tour.Next(city) << ")" << ",";
-            assert(it == tour.elements[city].parent);
+        base.ForEach(it, [&](auto city) {
+            out << city << "(" << base.Prev(city) << "," << base.Next(city) << ")" << ",";
         });
         out << "]";
     }

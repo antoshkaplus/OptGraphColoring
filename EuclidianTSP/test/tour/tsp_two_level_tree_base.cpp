@@ -5,12 +5,16 @@
 
 
 void CheckParentSync(const TwoLevelTreeBase& base) {
-    auto& ps = base.parents;
-    for (auto it = ps.begin(); it != ps.end(); ++it) {
+    Index i = 0;
+    base.ForEachParent([&](auto it) {
+        ASSERT_EQ(i++, it->position());
+        auto count = 0;
         base.ForEach(it, [&](auto city) {
-           ASSERT_EQ(base.elements[city].parent, it) << base;
+            ++count;
+            ASSERT_EQ(base.parent(city), it) << base;
         });
-    }
+        ASSERT_EQ(count, it->size());
+    });
 }
 
 auto Sequence(Count city_count) {
@@ -28,7 +32,7 @@ void Check(const TwoLevelTreeBase& base, const vector<Index>& expected_order) {
 
 TEST(TwoLevelTreeBase, Constructor) {
     TwoLevelTreeBase base(10);
-    ASSERT_EQ(base.parents.size(), 1);
+    ASSERT_EQ(base.parent_count(), 1);
     CheckParentSync(base);
 
     ASSERT_EQ(base.Order(), Sequence(10));
@@ -96,5 +100,76 @@ TEST(TwoLevelTreeBase, Reverse_2) {
         base.SplitAt_2(3);
         base.Reverse(base.parent(1), base.parent(2));
         Check(base, {0, 2, 1, 3});
+    }
+    {
+        TwoLevelTreeBase base(6);
+        base.SplitAt_2(1);
+        base.SplitAt_2(3);
+        base.SplitAt_2(5);
+        base.Reverse(base.parent(1), base.parent(3));
+        Check(base, {0, 4, 3, 2, 1, 5});
+    }
+}
+
+
+TEST(TwoLevelTreeBase, Dereverse) {
+    {
+        TwoLevelTreeBase base(4);
+        base.SplitAt_2(1);
+        base.SplitAt_2(3);
+        base.Reverse(base.parent(1));
+        base.Dereverse(base.parent(1));
+        Check(base, {0, 2, 1, 3});
+    }
+}
+
+TEST(TwoLevelTreeBase, SplitReversed) {
+    {
+        TwoLevelTreeBase base(4);
+        base.SplitAt_2(1);
+        base.SplitAt_2(3);
+        base.Reverse(base.parent(1));
+        base.SplitAt_2(1);
+        Check(base, {0, 2, 1, 3});
+    }
+}
+
+TEST(TwoLevelTreeBase, MergeRight) {
+    {
+        TwoLevelTreeBase base(2);
+        base.SplitAt_2(1);
+        base.MergeRight(base.parent(0));
+        Check(base, {0, 1});
+        ASSERT_EQ(base.parent_count(), 1);
+    }
+    {
+        TwoLevelTreeBase base(6);
+        base.SplitAt_2(1);
+        base.SplitAt_2(3);
+        base.SplitAt_2(5);
+        base.MergeRight(base.parent(1));
+        Check(base, {0, 1, 2, 3, 4, 5});
+        ASSERT_EQ(base.parent_count(), 3);
+    }
+    {
+        TwoLevelTreeBase base(6);
+        base.SplitAt_2(1);
+        base.SplitAt_2(3);
+        base.SplitAt_2(5);
+        base.Reverse(base.parent(1));
+        base.Reverse(base.parent(3));
+        base.MergeRight(base.parent(1));
+        Check(base, {0, 2, 1, 4, 3, 5});
+        ASSERT_EQ(base.parent_count(), 3);
+    }
+    {
+        TwoLevelTreeBase base(6);
+        base.SplitAt_2(1);
+        base.SplitAt_2(3);
+        base.SplitAt_2(5);
+        base.Reverse(base.parent(1));
+        base.MergeRight(base.parent(1));
+        Check(base, {0, 2, 1, 3, 4, 5});
+        ASSERT_EQ(base.parent_count(), 3);
     }
 }
