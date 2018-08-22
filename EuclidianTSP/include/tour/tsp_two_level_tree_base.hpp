@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ant/core/sequential_indexer.hpp"
+
 #include "tsp_util.hpp"
 
 
@@ -44,17 +46,20 @@ class TwoLevelTreeBase {
         Index segPos;
     };
 
-
     std::list<Parent> parents;
+    SequentialIndexer<std::list<Parent>, Index&(*)(std::list<Parent>::iterator)> indexer;
+
     // index is a city
     std::vector<SegElement> elements;
+
 
 public:
     using ParentIt = std::list<Parent>::iterator;
     using ConstParentIt = std::list<Parent>::const_iterator;
 
 
-    TwoLevelTreeBase(Count count) {
+    TwoLevelTreeBase(Count count) : indexer(parents, [](ParentIt it) -> Index& { return it->pos; }) {
+
         parents.emplace_back(Parent{false, 0, 0, count-1, count});
 
         elements.resize(count);
@@ -203,13 +208,21 @@ public:
         auto last = std::next(p_b);
 
         std::list<Parent> tmp;
-        auto pos = p_a->pos;
         tmp.splice(tmp.begin(), parents, p_a, last);
         tmp.reverse();
+
+        auto next = tmp.begin();
+        auto prev = std::prev(tmp.end());
+
+        for (auto i = 0; i < tmp.size()/2; ++i) {
+            std::swap(next->pos, prev->pos);
+            next = std::next(next);
+            prev = std::prev(prev);
+        }
         for (auto& item : tmp) {
-            item.pos = pos++;
             item.reverse = !item.reverse;
         }
+
         parents.splice(last, tmp);
     }
 
@@ -225,11 +238,6 @@ public:
         for (auto it = parents.begin(); it != parents.end(); ++it) {
             func(it);
         }
-    }
-
-    template<class Func>
-    void ForEach(ConstParentIt parent, Func&& func) const {
-        ForEach(seg_begin(parent), seg_end(parent), func);
     }
 
     template<class Func>
@@ -277,13 +285,13 @@ public:
         // exists by condition earlier
         seg_end(parent) = Prev(a);
 
-        auto new_size = CountBetween(new_seg_begin, new_seg_end);
+        auto new_size = std::abs(elements[new_seg_begin].segPos - elements[new_seg_end].segPos) + 1;
         parent->sz -= new_size;
 
-        auto new_parent = parents.emplace(std::next(parent), Parent{parent->reverse, parent->pos+1, new_seg_begin, new_seg_end, new_size});
-        ReindexParents(new_parent);
+        auto new_parent = parents.emplace(std::next(parent), Parent{parent->reverse, 0, new_seg_begin, new_seg_end, new_size});
+        indexer.Reset(new_parent);
 
-        ForEach(new_parent, [&](auto city) mutable {
+        ForEachBeginEnd(new_parent, [&](auto city) {
             elements[city].parent = new_parent;
         });
 
@@ -306,7 +314,6 @@ public:
 
         parents.erase(right);
 
-        ReindexParents(left);
         return left;
     }
 
@@ -340,26 +347,24 @@ private:
         }
     }
 
-    void ReindexParents(ParentIt source) {
-        for_each(std::next(source), parents.end(), [pos=source->pos](auto& p) mutable {
-            p.pos = ++pos;
+    void ResetParent(ParentIt p) {
+        ForEachBeginEnd(p, [&, segPos=0](auto city) mutable {
+            auto& el = elements[city];
+            el.segPos = segPos++;
+            el.parent = p;
         });
     }
 
-    void ResetParent(ParentIt p) {
-        auto pos = 0;
-        auto diff = 1;
-        if (p->reverse) {
-            pos = p->sz-1;
-            diff = -1;
-        }
+    template<class Func>
+    void ForEachBeginEnd(ConstParentIt parent, Func&& func) {
+        auto begin = parent->segBegin;
+        auto end = parent->segEnd;
 
-        ForEach(p, [&](auto city) {
-            auto& el = elements[city];
-            el.segPos = pos;
-            el.parent = p;
-            pos += diff;
-        });
+        for (;;) {
+            func(begin);
+            if (begin == end) return;
+            begin = elements[begin].next;
+        }
     }
 
     friend std::ostream& operator<<(std::ostream& out, const TwoLevelTreeBase& base);
@@ -369,7 +374,7 @@ inline std::ostream& operator<<(std::ostream& out, const TwoLevelTreeBase& base)
     auto& ps = base.parents;
     for (auto it = ps.begin(); it != ps.end(); ++it) {
         out << "[";
-        base.ForEach(it, [&](auto city) {
+        base.ForEach(base.seg_begin(it), base.seg_end(it), [&](auto city) {
             out << city << "(" << base.Prev(city) << "," << base.Next(city) << ")" << ",";
         });
         out << "]";

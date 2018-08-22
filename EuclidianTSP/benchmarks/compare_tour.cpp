@@ -16,5 +16,8 @@ void BM_TSP_Tour(benchmark::State& state) {
     }
 }
 
-BENCHMARK_TEMPLATE(BM_TSP_Tour, VectorTour)->Arg(1000)->Arg(5000)->Arg(10'000)->Arg(50'000)->Arg(100'000);
-BENCHMARK_TEMPLATE(BM_TSP_Tour, TwoLevelTreeTour)->Arg(1000)->Arg(5000)->Arg(10'000)->Arg(50'000)->Arg(100'000);
+BENCHMARK_TEMPLATE(BM_TSP_Tour, VectorTour)->Arg(1000)->Arg(5000)->Arg(10'000)->Arg(50'000)->Arg(100'000); //->Arg(1000'000);
+BENCHMARK_TEMPLATE(BM_TSP_Tour, TwoLevelTreeTour)->Arg(1000)->Arg(5000)->Arg(10'000)->Arg(50'000)->Arg(100'000); //->Arg(1000'000);
+
+//BENCHMARK_TEMPLATE(BM_TSP_Tour, VectorTour)->Arg(1000)->Arg(5000)->Arg(10'000);
+//BENCHMARK_TEMPLATE(BM_TSP_Tour, TwoLevelTreeTour)->Arg(1000)->Arg(5000)->Arg(10'000);

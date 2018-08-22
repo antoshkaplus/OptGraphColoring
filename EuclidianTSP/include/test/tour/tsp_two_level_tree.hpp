@@ -7,13 +7,11 @@
 
 
 inline void CheckParentSync(const TwoLevelTreeBase& base) {
-    Index i = 0;
     base.ForEachParent([&](auto it) {
         ASSERT_TRUE(base.seg_ordered(base.seg_begin(it), base.seg_end(it)));
 
-        ASSERT_EQ(i++, it->position());
         auto count = 0;
-        base.ForEach(it, [&](auto city) {
+        base.ForEach(base.seg_begin(it), base.seg_end(it), [&](auto city) {
             ++count;
             ASSERT_EQ(base.parent(city), it) << base;
         });
