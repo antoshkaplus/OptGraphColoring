@@ -9,6 +9,13 @@ class VectorTour {
 
 public:
     VectorTour() {}
+
+    VectorTour(Count city_count) {
+        orderToCity.resize(city_count);
+        iota(orderToCity.begin(), orderToCity.end(), 0);
+        cityToOrder = orderToCity;
+    }
+
     VectorTour(vector<Index> orderToCity) : orderToCity(std::move(orderToCity)), cityToOrder(this->orderToCity.size()) {
         for (auto i = 0; i < this->orderToCity.size(); ++i) {
             cityToOrder[this->orderToCity[i]] = i;
@@ -50,6 +57,20 @@ public:
     }
 
     void Flip(Index a, Index b, Index c, Index d) {}
+
+    void Reverse(Index city_1, Index city_2) {
+        auto order_1 = cityToOrder[city_1];
+        auto order_2 = cityToOrder[city_2];
+
+        if (order_1 > order_2) {
+            swap(order_1, order_2);
+        }
+
+        for (auto i_1 = order_1, i_2 = order_2; i_1 < i_2; ++i_1, --i_2) {
+            swap(orderToCity[i_1], orderToCity[i_2]);
+            swap(cityToOrder[orderToCity[i_1]], cityToOrder[orderToCity[i_2]]);
+        }
+    }
 
     template<class UpdaterFactory>
     void Reverse(Index city_1, Index city_2, UpdaterFactory& factory) {

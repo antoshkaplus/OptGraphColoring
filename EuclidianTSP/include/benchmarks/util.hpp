@@ -1,5 +1,8 @@
 #pragma once
 
+#include <array>
+
+#include <benchmark/benchmark.h>
 #include <ant/core/core.hpp>
 
 
@@ -14,9 +17,9 @@ inline vector<std::array<Index, 2>> cityPairs(Count city_count, Count pair_count
 
     uniform_int_distribution distr(0, city_count-1);
     vector<std::array<Index, 2>> pairs(pair_count);
-    for (auto& [p_1, p_2] : pairs) {
-        p_1 = distr(rng);
-        p_2 = distr(rng);
+    for (auto& p : pairs) {
+        p[0] = distr(rng);
+        p[1] = distr(rng);
     }
     return pairs;
 }

@@ -47,7 +47,7 @@ public:
         }
 
         auto a_p_2 = base_.SplitAt_2(a);
-        auto a_next = a_p_2 ? a_p_2.value() : a_p;
+        auto a_next = a_p_2 ? *a_p_2 : a_p;
 
         base_.SplitAt_2(Next(b));
         auto b_next = b_p;
@@ -89,7 +89,7 @@ private:
         auto a_p = base_.SplitAt_2(a);
         base_.SplitAt_2(Next(b));
 
-        base_.Reverse(a_p ? a_p.value() : p);
+        base_.Reverse(a_p ? *a_p : p);
         TryMergeSides(p);
     }
 
