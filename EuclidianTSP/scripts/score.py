@@ -1,7 +1,7 @@
 
 import sys
 import os
-from StringIO import StringIO
+from io import StringIO
 import subprocess as sp
 from multiprocessing import cpu_count
 from multiprocessing import Pool
@@ -11,7 +11,7 @@ TEST = None
 VERSION = None
 
 CPU_COUNT = cpu_count()
-if CPU_COUNT > 2: CPU_COUNT-= 2
+if CPU_COUNT > 2: CPU_COUNT -= 2
 
 parser = OptionParser(usage="usage: %prog --version=%executable [--test=%index] [--cpu=%cpu_count]")
 parser.add_option("--test", dest="test")
@@ -32,7 +32,7 @@ if options.cpu_count:
     CPU_COUNT = int(options.cpu_count)
 
 def worker(name):
-    print "start problem: " + name
+    print("start problem:", name)
 
     out = StringIO()
     p = sp.Popen("../bin/" + VERSION, stdin=open("../data/" + name), stdout=sp.PIPE, stderr=sp.PIPE)
@@ -41,7 +41,7 @@ def worker(name):
     return line
 
 # skip new line chars
-names = map(lambda x: x[:-1], list(open("problem_names.txt")))
+names = list(map(lambda x: x[:-1], open("problem_names.txt")))
 if TEST != None: names = [names[TEST]]
 
 pool = Pool(CPU_COUNT)
@@ -49,4 +49,4 @@ result = pool.map(worker, (n for n in names))
 with open("../scores/" + VERSION + ".txt", "w") as out:
     out.write(str(len(result)) + "\n")
     for name, score in zip(names, result):
-        out.write(name + "," + score + "\n")
+        out.write(str(name) + "," + str(float(score)) + "\n")

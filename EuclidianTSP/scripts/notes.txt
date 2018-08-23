@@ -1,6 +1,0 @@
-Failed By Time. Need timer stop:
-ant_colony
-
-Need error check. Look at memory consumption.
-shortest_edge
-simplex_ins

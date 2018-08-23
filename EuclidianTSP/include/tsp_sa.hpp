@@ -1,9 +1,11 @@
 #pragma once
 
 #include <armadillo>
+#include <ant/grid/grid.hpp>
 
 #include "tsp.hpp"
 #include "tour/tsp_tour.hpp"
+#include "tour/tsp_two_level_tree_tour.hpp"
 
 class CoolingSchedule {
     double T_0 = 10000;
@@ -12,7 +14,7 @@ public:
     CoolingSchedule() {}
     CoolingSchedule(double T_0) : T_0(T_0) {}
 
-    double temperature(Index iter) const {
+    double temperature(double iter) const {
         return T_0 / iter;
     }
 };
@@ -51,46 +53,41 @@ template<class CoolingSchedule=::CoolingSchedule, class TDistance=DistanceComput
 struct TSP_SA : TSP_Solver {
 
     // 100000
-    Count iterations;
+    uint64_t iterations;
+    std::chrono::duration<int> time_limit;
 
-    TSP_SA(Count iterations) : iterations(iterations) {}
+    TSP_SA(uint64_t iterations, std::chrono::duration<int> time_limit) : iterations(iterations), time_limit(time_limit) {}
 
 
     vector<City> solve(const vector<Point>& points) {
 
+        CoolingSchedule cooling_schedule(iterations);
         TDistance dist(points);
+        TwoLevelTreeTour tour(points.size());
 
-        vector<City> res(points.size());
-        iota(res.begin(), res.end(), 0);
         default_random_engine rng;
-        shuffle(res.begin(), res.end(), rng);
-
-
         uniform_int_distribution city_distr(0, Index(points.size()-1));
-        for (auto iter = 0; iter < iterations; ++iter) {
+        uniform_real_distribution zero_one_distr;
+
+        auto start = std::chrono::system_clock::now();
+        for (uint64_t iter = 0; iter < iterations && std::chrono::system_clock::now() - start < time_limit; ++iter) {
             auto c_1 = city_distr(rng);
             auto c_2 = city_distr(rng);
-            tie(c_1, c_2) = minmax(c_1, c_2);
 
-            vector<City> new_route = res;
+            if (!tour.ReverseOrdered(c_1, c_2)) swap(c_1, c_2);
 
-            reverse(new_route.begin()+c_1, new_route.begin()+c_2+1);
+            auto c_1_prev = tour.Prev(c_1);
+            auto c_2_next = tour.Next(c_2);
 
-            // compute diff between distances
+            double d_old = dist(c_1_prev, c_1) + dist(c_2, c_2_next);
+            double d_new = dist(c_1, c_2_next) + dist(c_2, c_1_prev);
 
-            // put it all in
+            double diff = d_new - d_old;
 
-            // what about trials on certain temperature ???
-
-//            deriv.new_violations < coloring.violations ||
-//            exp(-(deriv.new_violations - coloring.violations) / cooling_schedule.temperature(iter)) > zero_one_distr(rng)
-
-            // Apply new route
-
-            // keep result someplace else too
-            // or we don't really need to
+            if (diff < 0 || exp( -diff / cooling_schedule.temperature(iter) ) > zero_one_distr(rng)) {
+                tour.Reverse(c_1, c_2);
+            }
         }
-        return res;
+        return tour.Order();
     }
-
 };

@@ -29,6 +29,11 @@ file(GLOB_RECURSE BUILD_FILES "./test/*.cpp")
 add_executable(TSP_TEST ${BUILD_FILES})
 target_link_libraries(TSP_TEST gtest pthread)
 
+# analysis
+
+add_executable(tsp_sa_analysis app/sa_analysis.cpp)
+target_link_libraries(tsp_sa_analysis ant tbb)
+
 # methods
 
 add_executable(tsp_simplex_ins app/methods.cpp)

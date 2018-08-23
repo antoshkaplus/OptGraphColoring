@@ -32,15 +32,14 @@ for f_name in filenames:
                 score = float(line.split(",")[1])
                 sol.add_local_score(score)
             except ValueError:
-                print f_name
-                print line
+                print(f_name, line)
                 raise
 
         solutions.append(sol)
 
-best_scores = map(min, zip(*[s.local_scores for s in solutions]))
-map(lambda x: x.init_global(best_scores), solutions)
+best_scores = list(map(min, zip(*[s.local_scores for s in solutions])))
+for x in solutions: x.init_global(best_scores)
 solutions.sort(key=lambda x: x.global_score, reverse=True)
 
 for s in solutions:
-    print s.name, ":", s.global_score
+    print(s.name, ":", s.global_score)

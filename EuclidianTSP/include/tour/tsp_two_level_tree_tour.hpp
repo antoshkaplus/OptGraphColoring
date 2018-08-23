@@ -29,6 +29,10 @@ public:
         return base_.Between(a, b, c);
     }
 
+    bool ReverseOrdered(Index a, Index b) const {
+        return base_.seg_ordered(a, b);
+    }
+
     void Flip(Index a, Index b, Index c, Index d) {
         throw std::runtime_error("Not Implemented");
     }

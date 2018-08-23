@@ -74,7 +74,8 @@ int main(int argc, const char * argv[])
         {"near_insert", Method::NEAREST_INSERTION},
         {"far_insert", Method::FARTHEST_INSERTION},
         {"rand_insert", Method::RANDOM_INSERTION},
-        {"simplex", Method::SIMPLEX_INSERTION}
+        {"simplex", Method::SIMPLEX_INSERTION},
+        {"sa", Method::SIMULATED_ANNEANLING}
     };
     
     map<string, Improver> improvers = {

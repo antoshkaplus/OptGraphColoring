@@ -12,56 +12,57 @@
 
 int main(int argc, const char * argv[]) {
 
+
+
     try {
+
+        ifstream file;
+        if (argc == 2) {
+            file.open(argv[1]);
+        }
+        istream& cin = argc == 2 ? file : std::cin;
 
         auto problem = ReadProblem(cin);
 
 #ifdef SIMPLEX_INS
 
         TSP_SimplexInsertion solver;
-        solver.solve(problem);
 
 #endif
 #ifdef SHORTEST_EDGE
 
         TSP_ShortestEdge solver;
-        solver.solve(problem);
 
 #endif
 #ifdef RANDOM_INS
 
         TSP_RandomInsertion solver;
-        solver.solve(problem);
 
 #endif
 #ifdef NEAREST_NEIGHBOR
 
         TSP_NearestNeighbor solver;
-        solver.solve(problem);
 
 #endif
 #ifdef NEAREST_INS
 
         TSP_NearestInsertion solver;
-        solver.solve(problem);
 
 #endif
 #ifdef FARTHEST_INS
 
         TSP_FarthestInsertion solver;
-        solver.solve(problem);
 
 #endif
 #ifdef ANT_COLONY
 
         TSP_AntColony solver;
-        solver.solve(problem);
 
 #endif
 #ifdef SA
 
-        TSP_SA solver(10000);
-        solver.solve(problem);
+        uint64_t iterations = problem.size() * problem.size() * 100;
+        TSP_SA solver(iterations, std::chrono::hours(1));
 
 #endif
 
