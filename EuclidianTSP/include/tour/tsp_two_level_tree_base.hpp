@@ -5,8 +5,6 @@
 #include "tsp_util.hpp"
 
 
-// another solution would be to have a special wrapper and
-// expose this wrapper to the user instead of Parent iterator
 class TwoLevelTreeBase {
 
     class Parent {
@@ -249,27 +247,23 @@ public:
         }
     }
 
-    // does not modify state of object
-    // changes representation
-    void Dereverse(ParentIt parent) {
+    void FlipReverse(ParentIt parent) {
         auto& p = *parent;
 
-        if (!p.reverse) return;
+        auto a = p.segEnd;
 
-        auto a = p.segBegin;
-
-        for (auto new_pos = p.sz-1; new_pos >= 0; --new_pos) {
+        for (auto new_pos = 0; new_pos < p.sz; ++new_pos) {
             auto& el = elements[a];
-            auto a_next = el.next;
+            auto a_prev = el.prev;
 
             swap(el.next, el.prev);
             el.segPos = new_pos;
 
-            a = a_next;
+            a = a_prev;
         }
 
         swap(p.segBegin, p.segEnd);
-        p.reverse = false;
+        p.reverse = !p.reverse;
     }
 
     std::experimental::optional<ParentIt> SplitAt_2(Index a) {
@@ -285,7 +279,7 @@ public:
         // exists by condition earlier
         seg_end(parent) = Prev(a);
 
-        auto new_size = std::abs(elements[new_seg_begin].segPos - elements[new_seg_end].segPos) + 1;
+        auto new_size = BetweenCountSameParent(new_seg_begin, new_seg_end);
         parent->sz -= new_size;
 
         auto new_parent = parents.emplace(std::next(parent), Parent{parent->reverse, 0, new_seg_begin, new_seg_end, new_size});
@@ -303,8 +297,7 @@ public:
         if (right == parents.end()) return left;
 
         if (left->reverse != right->reverse) {
-            if (left->reverse) Dereverse(left);
-            else Dereverse(right);
+            FlipReverse(left->sz < right->sz ? left : right);
         }
 
         left->sz += right->sz;
@@ -365,6 +358,10 @@ private:
             if (begin == end) return;
             begin = elements[begin].next;
         }
+    }
+
+    Count BetweenCountSameParent(Index a, Index b) {
+        return std::abs(elements[a].segPos - elements[b].segPos) + 1;
     }
 
     friend std::ostream& operator<<(std::ostream& out, const TwoLevelTreeBase& base);

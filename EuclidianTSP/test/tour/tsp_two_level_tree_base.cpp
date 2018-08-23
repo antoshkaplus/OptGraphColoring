@@ -90,7 +90,7 @@ TEST(TwoLevelTreeBase, Dereverse) {
         base.SplitAt_2(1);
         base.SplitAt_2(3);
         base.Reverse(base.parent(1));
-        base.Dereverse(base.parent(1));
+        base.FlipReverse(base.parent(1));
         Check(base, {0, 2, 1, 3});
     }
 }

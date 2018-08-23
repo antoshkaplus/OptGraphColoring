@@ -4,7 +4,3 @@ ant_colony
 Need error check. Look at memory consumption.
 shortest_edge
 simplex_ins
-
-TODO
-implement deque like struct that supports quick reverse with reverse bit.
-think about putting it to the main library
