@@ -7,6 +7,10 @@
 #include "tour/tsp_tour.hpp"
 #include "tour/tsp_two_level_tree_tour.hpp"
 
+inline uint64_t TSP_SA_Iterations(uint64_t city_count) {
+    return city_count * city_count * 100;
+}
+
 class CoolingSchedule {
     double T_0 = 10000;
 public:

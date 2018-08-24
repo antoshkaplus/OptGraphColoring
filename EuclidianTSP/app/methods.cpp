@@ -61,8 +61,7 @@ int main(int argc, const char * argv[]) {
 #endif
 #ifdef SA
 
-        uint64_t iterations = problem.size() * problem.size() * 100;
-        TSP_SA solver(iterations, std::chrono::hours(1));
+        TSP_SA solver(TSP_SA_Iterations(problem.size()), std::chrono::hours(1));
 
 #endif
 
