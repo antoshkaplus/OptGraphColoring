@@ -56,6 +56,21 @@ public:
     using ConstParentIt = std::list<Parent>::const_iterator;
 
 
+    TwoLevelTreeBase(const std::vector<Index>& cities) : indexer(parents, [](ParentIt it) -> Index& { return it->pos; }) {
+
+        Count count = cities.size();
+        parents.emplace_back(Parent{false, 0, 0, count-1, count});
+
+        elements.resize(count);
+        for (auto i = 0; i < count; ++i) {
+            auto& el = elements[cities[i]];
+            el.prev = cities[prev_ring_index(i, count)];
+            el.next = cities[next_ring_index(i, count)];
+            el.segPos = i;
+            el.parent = parents.begin();
+        }
+    }
+
     TwoLevelTreeBase(Count count) : indexer(parents, [](ParentIt it) -> Index& { return it->pos; }) {
 
         parents.emplace_back(Parent{false, 0, 0, count-1, count});

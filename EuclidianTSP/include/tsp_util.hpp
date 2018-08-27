@@ -29,6 +29,10 @@ inline double TSP_Distance(const vector<Point>& pr, const vector<Index>& sol) {
     }).second;
 }
 
+inline double TSP_Distance(const vector<Point>& pr, Index city_1, Index city_2) {
+    return pr[city_1].Distance(pr[city_2]);
+}
+
 inline void WriteProblem(ostream& out, const Problem& pr) {
     out << pr.size() << endl;
     for (auto p : pr) {

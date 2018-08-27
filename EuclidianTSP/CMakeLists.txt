@@ -65,5 +65,5 @@ target_link_libraries(tsp_ant_colony ant)
 target_compile_definitions(tsp_ant_colony PUBLIC -DANT_COLONY)
 
 add_executable(tsp_sa app/methods.cpp)
-target_link_libraries(tsp_sa ant armadillo)
+target_link_libraries(tsp_sa ant)
 target_compile_definitions(tsp_sa PUBLIC -DSA)

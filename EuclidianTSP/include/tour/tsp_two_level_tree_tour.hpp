@@ -9,6 +9,12 @@ class TwoLevelTreeTour {
     Count sz_bound;
 
 public:
+    TwoLevelTreeTour(const vector<Index>& cities) : base_(cities), sz_bound(static_cast<Count>(sqrt(cities.size()))) {
+        base_.ForEachParent([&](auto it) {
+            while (SplitOversized(it));
+        });
+    }
+
     TwoLevelTreeTour(Count city_count) : TwoLevelTreeTour(city_count, static_cast<Count>(sqrt(city_count))) {}
 
     TwoLevelTreeTour(Count city_count, Count sz_bound) : base_(city_count), sz_bound(sz_bound) {
@@ -34,7 +40,15 @@ public:
     }
 
     void Flip(Index a, Index b, Index c, Index d) {
-        throw std::runtime_error("Not Implemented");
+        if (a == Next(b)) swap(a, b);
+        if (c == Next(d)) swap(c, d);
+
+        auto [r_1, r_2] = std::make_pair(b, c);
+        if (!ReverseOrdered(r_1, r_2)) {
+            tie(r_1, r_2) = std::make_pair(d, a);
+        }
+
+        Reverse(r_1, r_2);
     }
 
     void Reverse(Index a, Index b) {

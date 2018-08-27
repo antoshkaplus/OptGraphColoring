@@ -6,6 +6,8 @@
 
 #include "tsp.hpp"
 #include "tsp_nearest_neighbor.hpp"
+#include "tsp_two_opt.hpp"
+#include "tsp_three_opt.hpp"
 
 /* algorithm described in : 
  * "Ant colonies for the traveling salesman problem" 
@@ -154,9 +156,9 @@ struct TSP_AntColony : TSP_Solver {
     void handleAntTours() {
         const vector<Point> &ps = *points; 
         TSP_TwoOpt opt;
-        for (auto& a : ants) {
-            a.tour = opt.improve(ps, a.tour);
-        }
+//        for (auto& a : ants) {
+//         TODO   a.tour = opt.improve(ps, a.tour);
+//        }
         Index best_ant = 0;
         double best_length = Perimeter(ps, ants[best_ant].tour, true);
         double length;

@@ -71,7 +71,7 @@ struct TSP_SA : TSP_Solver {
 
         default_random_engine rng;
         uniform_int_distribution city_distr(0, Index(points.size()-1));
-        uniform_real_distribution zero_one_distr;
+        uniform_real_distribution zero_one_distr {};
 
         auto start = std::chrono::system_clock::now();
         for (uint64_t iter = 0; iter < iterations && std::chrono::system_clock::now() - start < time_limit; ++iter) {

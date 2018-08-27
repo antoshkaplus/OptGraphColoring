@@ -56,7 +56,17 @@ public:
                (order_2 < order_3 && order_3 < order_1);
     }
 
-    void Flip(Index a, Index b, Index c, Index d) {}
+    void Flip(Index a, Index b, Index c, Index d) {
+        if (a == Next(b)) swap(a, b);
+        if (c == Next(d)) swap(c, d);
+
+        auto [r_1, r_2] = std::make_pair(b, c);
+        if (cityToOrder[r_1] > cityToOrder[r_2]) {
+            tie(r_1, r_2) = std::make_pair(d, a);
+        }
+
+        Reverse(r_1, r_2);
+    }
 
     void Reverse(Index city_1, Index city_2) {
         auto order_1 = cityToOrder[city_1];
