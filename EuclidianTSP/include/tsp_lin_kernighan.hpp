@@ -3,18 +3,24 @@
 #include "tsp.hpp
 
 
+template<class Tour>
 struct LinKernighan {
 
     Tour tour;
     const vector <Point>& ps;
+
     vector <vector<int>> nearestCities;
+
     int kNearest;
     int nCities;
 
     bool didTourChanged;
+
     vector <Edge> brokenEdges;
     vector <Edge> addedEdges;
+
     vector <Edge> segsLeft;
+
     time_t time;
     int maxOpt;
     int curOpt;
@@ -143,5 +149,65 @@ struct LinKernighan {
 
         return tour.cities;
     }
+
+
+    vector<Index> ts;
+
+    bool CanClose() {
+        ts.push_back(ts[0]);
+
+        // for each ts index another index of the broken edge
+        vector<Index> broken(ts.size() / 2);
+        for (auto i = 0; i < ts.size(); i += 2) {
+            broken[i] = i+1;
+            broken[i+1] = i; // pretty straight forward
+        }
+
+        // for index i find broken index : (i % 2 == 0) ? i+1 : i-1
+
+        // for new edges : (i % 2 == 0) ? i-1 : i+1
+
+        // for y care for i-1 as it can slip out of bounds
+        // for x care for i+1 as it can slip out of bounds
+
+        // prevent by using additional first and last elements???
+
+        // only indices should be sorted
+        vector<Index> ts_order;
+
+        sort(ts_order.begin(), ts_order.end(), bind(&Tour::LineOrdered, tour)); // if not line ordered it will swap the items.
+        // 0 - prev, 1 - next
+        vector<Index> ts_left(ts.size());
+        // just have to check first element if broken
+        for (auto i = 0; i < ts.size(); ) {
+            if (!broken(ts_order[i], ts_order[i+1])) {
+                ts_left[ts_order[i]] = ts_order[i+1];
+                ts_left[ts_order[i+1]] = ts_order[i];
+                i += 2;
+            }
+            // if broken just go to the next one
+        }
+
+        // so now I have both added and left. is path exists
+
+        vector<bool> ts_visited(ts.size(), false);
+
+        auto t_index = 0;
+        for (auto i = 0; i < ts.size() / 2; ++i) {
+            if (ts_visited[t_index]) return false;
+
+            ts_visited[t_index] = true;
+            t_index = ts_left[t_index];
+            ts_visited[t_index] = true;
+            t_index = added(t_index);
+        }
+        return true;
+    }
+
+    // again we have ts vector + tour. need to close it.
+    void Close() {
+
+    }
+
 };
 
