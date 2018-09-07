@@ -82,35 +82,20 @@ public:
         ts.push_back(distr(rng));
 
         for (auto i = 0; i < ps.size(); ++i) {
-            ts.push_back(ts.back());
-            // look up five closest points
-            for_each_nearest(ts.back(), 5, [&](Index city) {
-                if (find(ts.begin(), ts.end(), city) != ts.end()) return LoopControl::Continue;
+            // should I try Prev too ?
+            ts.push_back(tour.Next(ts.back()));
 
-                // compute gain for each
-                array<double, 2> gain = {-1, -1};
-                array<Index, 2> ends = {{tour.Next(city), tour.Prev(city)}};
+            if (TryImprove()) goto start;
 
-                double best_gain = 0;
-                Index end;
-                for (auto i : {0, 1}) {
-                    if ()
-                }
-
-
-
-            })
-
-
-            while (b2 != first) {
-                if (TSP_Distance(ps, a1, a2) + TSP_Distance(ps, b1, b2) >
-                    TSP_Distance(ps, a1, b1) + TSP_Distance(ps, a2, b2) + epsilon) {
-                    tour.Flip(a1, a2, b1, b2);
-                    goto start;
-                }
-                b1 = b2;
-                b2 = tour.Next(b1);
-            }
+//            while (b2 != first) {
+//                if (TSP_Distance(ps, a1, a2) + TSP_Distance(ps, b1, b2) >
+//                    TSP_Distance(ps, a1, b1) + TSP_Distance(ps, a2, b2) + epsilon) {
+//                    tour.Flip(a1, a2, b1, b2);
+//                    goto start;
+//                }
+//                b1 = b2;
+//                b2 = tour.Next(b1);
+//            }
 
             ts[0] = ts[1];
             ts.resize(1);
@@ -120,6 +105,62 @@ public:
     }
 
 private:
+
+    void TryImprove() {
+        assert(ts.size() == 2);
+
+        double gain = -Distance(ts[0], ts[1]);
+
+        TryImprove(gain);
+    }
+
+    bool TryImprove(double gain) {
+        bool improved = false;
+
+        for_each_nearest(ts.back(), 5, [&, gain=gain](Index city) {
+
+            if (find(ts.begin(), ts.end(), city) != ts.end()) return LoopControl::Continue;
+
+            gain += Distance(ts.back(), city);
+            if (gain < 0) return LoopControl::Continue;
+
+            array<Index, 2> ends = {{tour.Next(city), tour.Prev(city)}};
+
+            for (auto i : {0, 1}) {
+                //  this is wrong. has to consider whole edges
+                if (find(ts.begin(), ts.end(), ends[i]) != ts.end()) return LoopControl::Continue;
+
+                auto new_x = make_pair(city, ends[i]);
+
+                ts.push_back(city);
+                ts.push_back(ends[i]);
+                if (!CanClose()) {
+                    ts.pop_back();
+                    ts.pop_back();
+                    continue;
+                }
+
+                gain -= Distance(city, ends[i]);
+
+                // check if we can close with positive gain
+                // if possible close
+                double closeGain = gain + Distance(ends[i], ts[0]);
+                if (closeGain > 0) {
+                    improved = true;
+                    return LoopControl::Break;
+                }
+
+                // storing current state gonna be too costly
+                if (TryImprove()) {
+                    improved = true;
+                    return LoopControl::Break;
+                }
+            }
+        });
+
+        return improved;
+    }
+
 
     // y : returns another endpoint of added t_i
     inline static Index added_endpoint(Index t_index) {
