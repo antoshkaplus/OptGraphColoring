@@ -4,7 +4,7 @@
 
 
 template<class Tour>
-struct LinKernighan {
+struct LinKernighanOld {
 
     Tour tour;
     const vector <Point>& ps;
@@ -26,7 +26,7 @@ struct LinKernighan {
     int curOpt;
     double minGain;
 
-    LinKernighan(const vector <Point>& ps, const vector<int>& cities,
+    LinKernighanOld(const vector <Point>& ps, const vector<int>& cities,
                  int kNearest, int maxOpt, double minGain, time_t time)
         : tour(cities), ps(ps), nearestCities(cities.size()), kNearest(kNearest), nCities((int) cities.size()),
           time(time), maxOpt(maxOpt), minGain(minGain) {
