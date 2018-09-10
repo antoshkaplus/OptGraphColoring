@@ -142,16 +142,13 @@ private:
 
                 gain -= Distance(city, ends[i]);
 
-                // check if we can close with positive gain
-                // if possible close
                 double closeGain = gain + Distance(ends[i], ts[0]);
                 if (closeGain > 0) {
                     improved = true;
                     return LoopControl::Break;
                 }
 
-                // storing current state gonna be too costly
-                if (TryImprove()) {
+                if (TryImprove(gain)) {
                     improved = true;
                     return LoopControl::Break;
                 }
