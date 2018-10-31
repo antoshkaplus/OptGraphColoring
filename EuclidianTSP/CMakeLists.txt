@@ -5,6 +5,9 @@ file(GLOB HEADER_FILES "./include/*.hpp")
 include_directories(
     ./include 
     /usr/local/include)
+link_directories(
+    /usr/local/lib
+)
 
 
 find_library(ARMA_LIBRARY armadillo)
