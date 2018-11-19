@@ -8,6 +8,8 @@
 #include "tsp_farthest_insertion.hpp"
 #include "tsp_ant_colony.hpp"
 #include "tsp_sa.hpp"
+#include "tour/tsp_vector_tour.hpp"
+#include "tsp_lin_kernighan_base.hpp"
 
 
 int main(int argc, const char * argv[]) {
@@ -62,8 +64,33 @@ int main(int argc, const char * argv[]) {
         TSP_SA solver(TSP_SA_Iterations(problem.size()), std::chrono::hours(1));
 
 #endif
+#ifdef LIN_KERNIGHAN
 
+        vector<Index> cities(problem.size());
+        iota(cities.begin(), cities.end(), 0);
+        VectorTour tour {cities};
+        auto neighbours = NearestNeighbours(problem, 5);
+        auto total = 0.;
+        for (auto i = 0; i < neighbours.row_count(); ++i)
+        {
+            total += neighbours(i, 0);
+        }
+        total /= neighbours.row_count();
+        total *= 1e-1;
+
+        LinKernighanBase solver(tour, problem, neighbours, total);
+        solver.Solve();
+
+
+#endif
+
+
+#ifdef LIN_KERNIGHAN
+        auto solution = tour.Order();
+#else
         auto solution = solver.solve(problem);
+#endif
+
         if (!isFeasibleSolution(problem, solution)) throw runtime_error("result is not feasible");
 
         cout << TSP_Distance(problem, solution) << endl;

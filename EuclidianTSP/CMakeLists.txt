@@ -70,3 +70,7 @@ target_compile_definitions(tsp_ant_colony PUBLIC -DANT_COLONY)
 add_executable(tsp_sa app/methods.cpp)
 target_link_libraries(tsp_sa ant)
 target_compile_definitions(tsp_sa PUBLIC -DSA)
+
+add_executable(tsp_lin_kernighan app/methods.cpp)
+target_link_libraries(tsp_lin_kernighan ant)
+target_compile_definitions(tsp_lin_kernighan PUBLIC -DLIN_KERNIGHAN)

@@ -4,6 +4,7 @@
 
 #include <ant/core/core.hpp>
 #include <ant/geometry/d2.hpp>
+#include <ant/grid/grid.hpp>
 
 using namespace std;
 using namespace ant;
@@ -53,4 +54,25 @@ inline bool isFeasibleSolution(const Problem& pr, const Solution& sol) {
     if (*minmax.first != 0 || *minmax.second != sol.size()-1) return false;
 
     return true;
+}
+
+inline vector<Index> NearestNeighbours(const vector<Point>& ps, Index i, Count count) {
+    vector<Index> inds(ps.size());
+    iota(inds.begin(), inds.end(), 0);
+    swap(inds[i], inds.back());
+    inds.pop_back();
+
+    K_NearestPoints(ps, ps[i], inds, count);
+    return inds;
+}
+
+inline grid::Grid<Index> NearestNeighbours(const vector<Point>& ps, Count count) {
+    grid::Grid<Index> res(ps.size(), count);
+    for (auto i = 0; i < ps.size(); ++i) {
+        auto row = NearestNeighbours(ps, i, count);
+        for (auto j = 0; j < count; ++j) {
+            res(i, j) = row[j];
+        }
+    }
+    return res;
 }

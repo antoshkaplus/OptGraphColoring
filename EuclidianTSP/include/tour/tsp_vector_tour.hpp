@@ -3,6 +3,9 @@
 #include "tsp_util.hpp"
 
 
+// after reverse the same order direction is not guranteed.
+// it would require additional checks for prev and next.
+// maybe in the future if will need to support it.
 class VectorTour {
     vector<Index> orderToCity;
     vector<Index> cityToOrder;
@@ -22,11 +25,15 @@ public:
         }
     }
 
-    const vector<Index> OrderToCity() const {
+    const vector<Index>& OrderToCity() const {
         return orderToCity;
     }
 
-    const vector<Index> CityToOrder() const {
+    const vector<Index>& Order() const {
+        return orderToCity;
+    }
+
+    const vector<Index>& CityToOrder() const {
         return cityToOrder;
     }
 
@@ -73,6 +80,8 @@ public:
         auto order_2 = cityToOrder[city_2];
 
         if (order_1 > order_2) {
+            --order_1;
+            ++order_2;
             swap(order_1, order_2);
         }
 
@@ -117,6 +126,11 @@ public:
 
             updater.Next();
         }
+    }
+
+    bool LineOrdered(Index c_1, Index c_2) const
+    {
+        return cityToOrder[c_1] < cityToOrder[c_2];
     }
 
     // how to optimize to 2 times faster???
