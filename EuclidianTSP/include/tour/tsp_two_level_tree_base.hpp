@@ -239,6 +239,23 @@ public:
         parents.splice(last, tmp);
     }
 
+    bool LineOrdered(Index a, Index b) const
+    {
+        auto a_p = elements[a].parent;
+        auto b_p = elements[b].parent;
+
+        if (a_p == b_p) {
+
+            auto sp_a = elements[a].segPos;
+            auto sp_b = elements[b].segPos;
+
+            return (!a_p->reverse && sp_a < sp_b) ||
+                   ( a_p->reverse && sp_b < sp_a);
+        }
+
+        return a_p->pos < b_p->pos;
+    }
+
     template<class Func>
     void ForEachParent(Func&& func) const {
         for (auto it = parents.begin(); it != parents.end(); ++it) {

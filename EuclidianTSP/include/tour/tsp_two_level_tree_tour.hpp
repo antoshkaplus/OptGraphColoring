@@ -75,6 +75,11 @@ public:
         TryMergeSides(base_.parent(b));
     }
 
+    bool LineOrdered(Index a, Index b) const
+    {
+        return base_.LineOrdered(a, b);
+    }
+
     std::vector<Index> Order() const {
         return base_.Order();
     }
