@@ -79,6 +79,7 @@ int main(int argc, const char * argv[]) {
         total *= 1e-1;
 
         LinKernighanBase solver(tour, problem, neighbours, total);
+        solver.set_time_limit(std::chrono::minutes{20});
         solver.Solve();
 
 

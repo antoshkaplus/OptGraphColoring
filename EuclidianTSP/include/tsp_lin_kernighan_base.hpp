@@ -11,9 +11,16 @@ class LinKernighanBase {
     const grid::Grid<Index>& nearestNeighbours;
     double epsilon;
 
+    std::chrono::system_clock::duration time_limit = std::chrono::system_clock::duration::max();
+
 public:
     LinKernighanBase(Tour& tour, const vector<Point>& ps, const grid::Grid<Index>& nearestNeighbours, double epsilon)
         : tour(tour), ps(ps), nearestNeighbours(nearestNeighbours), epsilon(epsilon) {}
+
+
+    void set_time_limit(std::chrono::system_clock::duration time_limit) {
+        this->time_limit = time_limit;
+    }
 
     template <bool kVerbose = false>
     bool CanClose(const vector<Index>& ts) {
@@ -111,7 +118,14 @@ public:
         std::uniform_int_distribution<> distr(0, ps.size() - 1);
         std::default_random_engine rng;
 
+        auto start_timestamp = std::chrono::system_clock::now();
+
         start:
+
+        if (std::chrono::system_clock::now() - start_timestamp > time_limit) {
+            return;
+        }
+
         vector<Index> ts;
         ts.push_back(distr(rng));
 

@@ -53,6 +53,8 @@ public:
 
     void Reverse(Index a, Index b) {
         if (!base_.seg_ordered(a, b)) {
+            a = Prev(a);
+            b = Next(b);
             swap(a, b);
         }
 
@@ -77,7 +79,7 @@ public:
 
     bool LineOrdered(Index a, Index b) const
     {
-        return base_.LineOrdered(a, b);
+        return base_.seg_ordered(a, b);
     }
 
     std::vector<Index> Order() const {

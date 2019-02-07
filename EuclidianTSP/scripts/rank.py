@@ -15,6 +15,7 @@ class Solution:
     def add_local_score(self, s):
         self.local_scores.append(s)
 
+    # bigger global score is better
     def init_global(self, best_scores):
         self.global_score = int(10**6 * numpy.mean(numpy.divide(best_scores, self.local_scores)))
 
