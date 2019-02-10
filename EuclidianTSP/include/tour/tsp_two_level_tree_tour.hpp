@@ -51,9 +51,14 @@ public:
         Reverse(r_1, r_2);
     }
 
+    void Reverse() {
+        base_.Reverse(base_.parent_begin(), std::prev(base_.parent_end()));
+    }
+
     void Reverse(Index a, Index b) {
         if (!base_.seg_ordered(a, b)) {
             a = Prev(a);
+            if (a == b) return;
             b = Next(b);
             swap(a, b);
         }

@@ -54,9 +54,9 @@ public:
     }
 
     bool Between(Index city_1, Index city_2, Index city_3) {
-        auto order_1 = orderToCity[city_1];
-        auto order_2 = orderToCity[city_2];
-        auto order_3 = orderToCity[city_3];
+        auto order_1 = cityToOrder[city_1];
+        auto order_2 = cityToOrder[city_2];
+        auto order_3 = cityToOrder[city_3];
 
         return (order_1 < order_2 && order_2 < order_3) ||
                (order_3 < order_1 && order_1 < order_2) ||
@@ -79,16 +79,26 @@ public:
         auto order_1 = cityToOrder[city_1];
         auto order_2 = cityToOrder[city_2];
 
+//      Uncomment if "after" order needs to be preserved
+//        bool swapped = false;
         if (order_1 > order_2) {
             --order_1;
             ++order_2;
             swap(order_1, order_2);
+//            swapped = true;
         }
 
         for (auto i_1 = order_1, i_2 = order_2; i_1 < i_2; ++i_1, --i_2) {
             swap(orderToCity[i_1], orderToCity[i_2]);
             swap(cityToOrder[orderToCity[i_1]], cityToOrder[orderToCity[i_2]]);
         }
+
+//        if (swapped) {
+//            for (Index i_1 = 0, i_2 = orderToCity.size()-1; i_1 < i_2; ++i_1, --i_2) {
+//                swap(orderToCity[i_1], orderToCity[i_2]);
+//                swap(cityToOrder[orderToCity[i_1]], cityToOrder[orderToCity[i_2]]);
+//            }
+//        }
     }
 
     template<class UpdaterFactory>

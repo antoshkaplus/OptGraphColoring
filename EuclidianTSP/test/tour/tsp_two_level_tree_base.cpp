@@ -8,6 +8,15 @@ TEST(TwoLevelTreeBase, Constructor) {
     CheckParentSync(base);
 
     ASSERT_EQ(base.Order(), Sequence(10));
+
+    default_random_engine rng;
+    for (auto i = 0; i < 100; ++i) {
+        auto s = Sequence(10);
+        std::shuffle(s.begin(), s.end(), rng);
+
+        TwoLevelTreeBase base(s);
+        CheckParentSync(base);
+    }
 }
 
 
@@ -30,7 +39,7 @@ TEST(TwoLevelTreeBase, Split) {
 }
 
 
-TEST(TwoLevelTreeBase, Reverse_1) {
+TEST(TwoLevelTreeBase, Reverse_Parent) {
     {
         TwoLevelTreeBase base(1);
         base.Reverse(base.parent(0));
@@ -58,7 +67,7 @@ TEST(TwoLevelTreeBase, Reverse_1) {
 }
 
 
-TEST(TwoLevelTreeBase, Reverse_2) {
+TEST(TwoLevelTreeBase, Reverse_ParentRange) {
     {
         TwoLevelTreeBase base(2);
         base.SplitAt_2(1);

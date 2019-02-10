@@ -59,7 +59,7 @@ public:
     TwoLevelTreeBase(const std::vector<Index>& cities) : indexer(parents, [](ParentIt it) -> Index& { return it->pos; }) {
 
         Count count = cities.size();
-        parents.emplace_back(Parent{false, 0, 0, count-1, count});
+        parents.emplace_back(Parent{false, 0, cities.front(), cities.back(), count});
 
         elements.resize(count);
         for (auto i = 0; i < count; ++i) {

@@ -78,38 +78,17 @@ public:
         return true;
     }
 
-    // again we have ts vector + tour. need to close it.
     template <bool kVerbose = false>
     void Close(const vector<Index>& ts) {
-        // can change
 
-        if constexpr (kVerbose) {
-            Println(cout, "start new");
+        auto i_1 = ts[0];
+        for (auto i = 1; i < ts.size()-2; i+=2) {
+            auto i_2 = ts[i];
+            auto i_3 = ts[i+1];
+            auto i_4 = ts[i+2];
+            tour.Flip(i_1, i_2, i_3, i_4);
         }
 
-        for (auto i = 0; i < ts.size()-1; i+=2) {
-            auto i_1 = ts[i];
-            auto i_2 = ts[i+1];
-            auto i_3 = ts[(i+2) % ts.size()];
-
-            if constexpr (kVerbose) {
-                Println(cout, i_1, " ", i_2, " ", i_3);
-            }
-
-            if constexpr (kVerbose) {
-                Println(cout, "pre order: ", tour.OrderToCity());
-            }
-
-            if (tour.Prev(i_1) == i_2) {
-                tour.Reverse(i_1, i_3);
-            } else if (tour.Next(i_1) == i_2) {
-                tour.Reverse(i_3, i_1);
-            }
-
-            if constexpr (kVerbose) {
-                Println(cout, tour.OrderToCity());
-            }
-        }
     }
 
     template <bool kVerbose = false>
@@ -133,11 +112,21 @@ public:
             // should I try Prev too ?
             ts.push_back(tour.Next(ts.back()));
 
+            double before = 0;
+            if constexpr (kVerbose) before = TSP_Distance(ps, tour.Order());
+
             if (TryImprove<kVerbose>(ts)) {
-                Close(ts);
+                CheckGain<kVerbose>(ts);
+                Close<kVerbose>(ts);
+
                 if constexpr (kVerbose) {
                     Println(cout, "new tour:");
                     Println(cout, tour.Order());
+
+                    assert(!isFeasibleSolution(ps, tour.Order()));
+
+                    auto after = TSP_Distance(ps, tour.Order());
+                    assert(after < before);
                 }
                 goto start;
             }
@@ -161,6 +150,22 @@ public:
     }
 
 private:
+
+    template <bool kVerbose>
+    void CheckGain(const vector<Index>& ts) {
+        if constexpr (kVerbose) {
+            Println(cout, "improve");
+            Println(cout, ts);
+            double total = 0;
+            for (auto i = 1; i < ts.size(); ++i) {
+                auto d = 1;
+                if (i%2 == 1) d =-1;
+                total += d*Distance(ts[i-1], ts[i]);
+                Println(cout, "total: ", total);
+            }
+            Println(cout, "total: ", total + Distance(ts[0], ts.back()));
+        }
+    }
 
     template <bool kVerbose>
     bool TryImprove(vector<Index>& ts, double gain) {
@@ -214,7 +219,7 @@ private:
                 double closeGain = newGain + Distance(ends[i], ts[0]);
 
                 if constexpr (kVerbose) {
-                    Println(cout, "can close, close gain: ", closeGain);
+                    Println(cout, "can close, close gain: ", closeGain, " , continue: ", newGain);
                 }
 
                 if (closeGain < 0) {
@@ -224,6 +229,9 @@ private:
                 if (TryImprove<kVerbose>(ts, newGain)) {
                     return true;
                 }
+
+                ts.pop_back();
+                ts.pop_back();
             }
         }
 

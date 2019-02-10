@@ -31,16 +31,21 @@ TEST(TwoLevelTreeTour, Reverse_Small) {
         TwoLevelTreeTour tour(4);
         tour.Reverse(0, 3);
         Check(tour, {3, 2, 1, 0});
+        if (tour.Prev(3) == 2) tour.Reverse();
         tour.Reverse(0, 2);
         Check(tour, {3, 0, 1, 2});
+        if (tour.Prev(3) == 0) tour.Reverse();
         tour.Reverse(1, 3);
         Check(tour, {1, 0, 3, 2});
+        if (tour.Prev(1) == 0) tour.Reverse();
         tour.Reverse(0, 3);
         Check(tour, {1, 3, 0, 2});
+        if (tour.Prev(1) == 3) tour.Reverse();
         tour.Reverse(0, 2);
         Check(tour, {1, 3, 2, 0});
+        if (tour.Prev(1) == 3) tour.Reverse();
         tour.Reverse(0, 2);
-        Check(tour, {1, 3, 0, 2});
+        Check(tour, {1, 3, 2, 0});
     }
 }
 
@@ -61,6 +66,25 @@ TEST(TwoLevelTreeTour, Reverse_Big) {
 
                 Check(tour, vs);
             }
+        }
+    }
+}
+
+TEST(TwoLevelTreeTour, Reverse_Random) {
+    constexpr int test_count_base = 100;
+    std::default_random_engine rng;
+    for (auto n = 1; n <= 16; ++n) {
+        std::vector<Index> vs(n);
+        iota(vs.begin(), vs.end(), 0);
+
+        std::uniform_int_distribution distr(0, n-1);
+        for (auto t = 0; t < test_count_base*n; ++t) {
+            TwoLevelTreeTour tour(n);
+            auto i_1 = distr(rng);
+            auto i_2 = distr(rng);
+
+            tour.Reverse(i_1, i_2);
+            CheckParentSync(tour.base());
         }
     }
 }
