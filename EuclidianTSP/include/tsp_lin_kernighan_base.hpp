@@ -99,40 +99,41 @@ public:
 
         auto start_timestamp = std::chrono::system_clock::now();
 
-        start:
+        bool again = true;
+        while (again && std::chrono::system_clock::now() - start_timestamp < time_limit) {
+            again = false;
 
-        if (std::chrono::system_clock::now() - start_timestamp > time_limit) {
-            return;
-        }
+            vector<Index> ts;
+            ts.push_back(distr(rng));
 
-        vector<Index> ts;
-        ts.push_back(distr(rng));
+            for (auto i = 0; i < ps.size(); ++i) {
+                // should I try Prev too ?
+                ts.push_back(tour.Next(ts.back()));
 
-        for (auto i = 0; i < ps.size(); ++i) {
-            // should I try Prev too ?
-            ts.push_back(tour.Next(ts.back()));
+                double before = 0;
+                if constexpr (kVerbose) before = TSP_Distance(ps, tour.Order());
 
-            double before = 0;
-            if constexpr (kVerbose) before = TSP_Distance(ps, tour.Order());
+                if (TryImprove<kVerbose>(ts)) {
+                    CheckGain<kVerbose>(ts);
+                    Close<kVerbose>(ts);
 
-            if (TryImprove<kVerbose>(ts)) {
-                CheckGain<kVerbose>(ts);
-                Close<kVerbose>(ts);
+                    if constexpr (kVerbose) {
+                        Println(cout, "new tour:");
+                        Println(cout, tour.Order());
 
-                if constexpr (kVerbose) {
-                    Println(cout, "new tour:");
-                    Println(cout, tour.Order());
+                        assert(!isFeasibleSolution(ps, tour.Order()));
 
-                    assert(!isFeasibleSolution(ps, tour.Order()));
+                        auto after = TSP_Distance(ps, tour.Order());
+                        assert(after < before);
+                    }
 
-                    auto after = TSP_Distance(ps, tour.Order());
-                    assert(after < before);
+                    again = true;
+                    break;
                 }
-                goto start;
-            }
 
-            ts[0] = ts[1];
-            ts.resize(1);
+                ts[0] = ts[1];
+                ts.resize(1);
+            }
         }
     }
 
