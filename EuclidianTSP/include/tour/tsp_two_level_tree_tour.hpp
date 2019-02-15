@@ -82,9 +82,10 @@ public:
         TryMergeSides(base_.parent(b));
     }
 
+    // TODO have two methods: LineOrdered and WeakLineOrdered
     bool LineOrdered(Index a, Index b) const
     {
-        return base_.seg_ordered(a, b);
+        return a != b && base_.seg_ordered(a, b);
     }
 
     std::vector<Index> Order() const {

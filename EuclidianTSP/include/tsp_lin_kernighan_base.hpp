@@ -110,7 +110,7 @@ public:
                 // should I try Prev too ?
                 ts.push_back(tour.Next(ts.back()));
 
-                double before = 0;
+                double before = 0; (void)before;
                 if constexpr (kVerbose) before = TSP_Distance(ps, tour.Order());
 
                 if (TryImprove<kVerbose>(ts)) {
@@ -177,7 +177,11 @@ private:
 
         // this shit is actually should be recursive probably
         auto row = ts.back();
-        for (auto col = 0; col < nearestNeighbours.col_count(); ++col) {
+
+        auto try_count = nearestNeighbours.col_count();
+        if (ts.size() >= 5) try_count = 1;
+
+        for (auto col = 0; col < try_count; ++col) {
             // city will be added
             auto city = nearestNeighbours(row, col);
 

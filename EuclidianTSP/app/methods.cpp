@@ -68,7 +68,7 @@ int main(int argc, const char * argv[]) {
 
         vector<Index> cities(problem.size());
         iota(cities.begin(), cities.end(), 0);
-        VectorTour tour {cities};
+        TwoLevelTreeTour tour {cities};
         auto neighbours = NearestNeighbours(problem, 5);
         auto total = 0.;
         for (auto i = 0; i < neighbours.row_count(); ++i)

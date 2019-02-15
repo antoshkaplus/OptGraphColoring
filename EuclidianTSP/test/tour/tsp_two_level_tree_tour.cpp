@@ -88,3 +88,28 @@ TEST(TwoLevelTreeTour, Reverse_Random) {
         }
     }
 }
+
+TEST(TwoLevelTreeTour, LineOrdered) {
+    constexpr int test_count = 10000;
+    constexpr int city_count = 1000;
+    std::default_random_engine rng;
+    std::uniform_int_distribution distr(0, city_count-1);
+    TwoLevelTreeTour tour(city_count);
+    for (auto t = 0; t < test_count; ++t)
+    {
+        {
+            auto i_1 = distr(rng);
+            auto i_2 = distr(rng);
+            tour.Reverse(i_1, i_2);
+        }
+        {
+            auto i_1 = distr(rng);
+            auto i_2 = distr(rng);
+            auto ordered = tour.LineOrdered(i_1, i_2);
+            auto order = tour.Order();
+            auto it_1 = std::find(order.begin(), order.end(), i_1);
+            auto it_2 = std::find(order.begin(), order.end(), i_2);
+            ASSERT_EQ(ordered, it_1 <= it_2);
+        }
+    }
+}
