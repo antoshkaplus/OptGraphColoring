@@ -53,7 +53,11 @@ if TEST != None: names = [names[TEST]]
 
 pool = Pool(CPU_COUNT)
 result = pool.map(worker, (n for n in names))
-with open("../scores/" + VERSION + ".txt", "w") as out:
+outputDirPath = "../scores/%s" % PROBLEM_SET
+outputFilePath = os.path.join(outputDirPath, "%s.txt" % VERSION)
+
+os.makedirs(outputDirPath)
+with open(outputFilePath, "w") as out:
     out.write(str(len(result)) + "\n")
     for name, score in zip(names, result):
         out.write(str(name) + "," + str(float(score)) + "\n")
