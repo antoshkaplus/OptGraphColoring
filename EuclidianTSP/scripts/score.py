@@ -35,7 +35,7 @@ if options.cpu_count:
     CPU_COUNT = int(options.cpu_count)
 
 if options.set:
-    PROBLEM_SET = options.set
+    PROBLEM_SET = options.prioblem_set
 
 
 def worker(name):
