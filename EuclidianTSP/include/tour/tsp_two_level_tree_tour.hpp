@@ -40,7 +40,7 @@ public:
         if (c == Next(d)) swap(c, d);
 
         auto [r_1, r_2] = std::make_pair(b, c);
-        if (!ReverseOrdered(r_1, r_2)) {
+        if (!LineOrdered(r_1, r_2)) {
             tie(r_1, r_2) = std::make_pair(d, a);
         }
 
