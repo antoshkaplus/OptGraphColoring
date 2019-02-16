@@ -35,10 +35,6 @@ public:
         return base_.Between(a, b, c);
     }
 
-    bool ReverseOrdered(Index a, Index b) const {
-        return base_.seg_ordered(a, b);
-    }
-
     void Flip(Index a, Index b, Index c, Index d) override {
         if (a == Next(b)) swap(a, b);
         if (c == Next(d)) swap(c, d);

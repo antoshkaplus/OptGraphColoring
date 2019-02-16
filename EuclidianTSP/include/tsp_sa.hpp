@@ -78,7 +78,8 @@ struct TSP_SA : TSP_Solver {
             auto c_1 = city_distr(rng);
             auto c_2 = city_distr(rng);
 
-            if (!tour.ReverseOrdered(c_1, c_2)) swap(c_1, c_2);
+            if (c_1 == c_2) continue;
+            if (!tour.LineOrdered(c_1, c_2)) swap(c_1, c_2);
 
             auto c_1_prev = tour.Prev(c_1);
             auto c_2_next = tour.Next(c_2);
