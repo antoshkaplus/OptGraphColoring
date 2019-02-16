@@ -13,10 +13,13 @@ VERSION = None
 CPU_COUNT = cpu_count()
 if CPU_COUNT > 2: CPU_COUNT -= 2
 
-parser = OptionParser(usage="usage: %prog --version=%executable [--test=%index] [--cpu=%cpu_count]")
+PROBLEM_SET = "all"
+
+parser = OptionParser(usage="usage: %prog --version=%executable [--test=%index] [--cpu=%cpu_count] [--set=%problem_set]")
 parser.add_option("--test", dest="test")
 parser.add_option("--version", dest="version")
 parser.add_option("--cpu", dest="cpu_count")
+parser.add_option("--set", dest="problem_set")
 
 (options, args) = parser.parse_args()
 
@@ -31,6 +34,10 @@ else:
 if options.cpu_count:
     CPU_COUNT = int(options.cpu_count)
 
+if options.set:
+    PROBLEM_SET = options.set
+
+
 def worker(name):
     print("start problem:", name)
 
@@ -41,7 +48,7 @@ def worker(name):
     return line
 
 # skip new line chars
-names = list(map(lambda x: x[:-1], open("problem_names.txt")))
+names = list(map(lambda x: x[:-1], open("data/problem_sets/%s.txt" % PROBLEM_SET)))
 if TEST != None: names = [names[TEST]]
 
 pool = Pool(CPU_COUNT)
