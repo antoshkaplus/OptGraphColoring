@@ -1,9 +1,9 @@
 #pragma once
 
 #include "tsp_two_level_tree_base.hpp"
+#include "tsp_tour.hpp"
 
-
-class TwoLevelTreeTour {
+class TwoLevelTreeTour : public Tour {
 
     TwoLevelTreeBase base_;
     Count sz_bound;
@@ -23,15 +23,15 @@ public:
         });
     }
 
-    Index Next(Index city) const {
+    Index Next(Index city) const override {
         return base_.Next(city);
     }
 
-    Index Prev(Index city) const {
+    Index Prev(Index city) const override {
         return base_.Prev(city);
     }
 
-    bool Between(Index a, Index b, Index c) const {
+    bool Between(Index a, Index b, Index c) const override {
         return base_.Between(a, b, c);
     }
 
@@ -39,7 +39,7 @@ public:
         return base_.seg_ordered(a, b);
     }
 
-    void Flip(Index a, Index b, Index c, Index d) {
+    void Flip(Index a, Index b, Index c, Index d) override {
         if (a == Next(b)) swap(a, b);
         if (c == Next(d)) swap(c, d);
 
@@ -55,7 +55,7 @@ public:
         base_.Reverse(base_.parent_begin(), std::prev(base_.parent_end()));
     }
 
-    void Reverse(Index a, Index b) {
+    void Reverse(Index a, Index b) override {
         if (!base_.seg_ordered(a, b)) {
             a = Prev(a);
             if (a == b) return;
@@ -82,8 +82,7 @@ public:
         TryMergeSides(base_.parent(b));
     }
 
-    // TODO have two methods: LineOrdered and WeakLineOrdered
-    bool LineOrdered(Index a, Index b) const
+    bool LineOrdered(Index a, Index b) const override
     {
         return a != b && base_.seg_ordered(a, b);
     }

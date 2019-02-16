@@ -1,25 +1,25 @@
 #pragma once
 
 #include "tsp_util.hpp"
-
+#include "tsp_tour.hpp"
 
 // after reverse the same order direction is not guranteed.
 // it would require additional checks for prev and next.
 // maybe in the future if will need to support it.
-class VectorTour {
+class VectorTour : public Tour {
     vector<Index> orderToCity;
     vector<Index> cityToOrder;
 
 public:
-    VectorTour() {}
+    VectorTour() = default;
 
-    VectorTour(Count city_count) {
-        orderToCity.resize(city_count);
+    explicit VectorTour(Count city_count) {
+        orderToCity.resize(static_cast<Count>(city_count));
         iota(orderToCity.begin(), orderToCity.end(), 0);
         cityToOrder = orderToCity;
     }
 
-    VectorTour(vector<Index> orderToCity) : orderToCity(std::move(orderToCity)), cityToOrder(this->orderToCity.size()) {
+    explicit VectorTour(vector<Index> orderToCity) : orderToCity(std::move(orderToCity)), cityToOrder(this->orderToCity.size()) {
         for (auto i = 0; i < this->orderToCity.size(); ++i) {
             cityToOrder[this->orderToCity[i]] = i;
         }
@@ -38,22 +38,22 @@ public:
     }
 
     Count Size() const {
-        return orderToCity.size();
+        return static_cast<Count>(orderToCity.size());
     }
 
-    Index Next(Index city) {
+    Index Next(Index city) const override {
         auto order = cityToOrder[city];
         if (order == orderToCity.size()-1) return orderToCity[0];
         return orderToCity[order+1];
     }
 
-    Index Prev(Index city) {
+    Index Prev(Index city) const override {
         auto order = cityToOrder[city];
         if (order == 0) return orderToCity.back();
         return orderToCity[order-1];
     }
 
-    bool Between(Index city_1, Index city_2, Index city_3) {
+    bool Between(Index city_1, Index city_2, Index city_3) const override {
         auto order_1 = cityToOrder[city_1];
         auto order_2 = cityToOrder[city_2];
         auto order_3 = cityToOrder[city_3];
@@ -63,7 +63,7 @@ public:
                (order_2 < order_3 && order_3 < order_1);
     }
 
-    void Flip(Index a, Index b, Index c, Index d) {
+    void Flip(Index a, Index b, Index c, Index d) override {
         if (a == Next(b)) swap(a, b);
         if (c == Next(d)) swap(c, d);
 
@@ -75,7 +75,7 @@ public:
         Reverse(r_1, r_2);
     }
 
-    void Reverse(Index city_1, Index city_2) {
+    void Reverse(Index city_1, Index city_2) override {
         auto order_1 = cityToOrder[city_1];
         auto order_2 = cityToOrder[city_2];
 
@@ -125,8 +125,8 @@ public:
             assert(order_1 < orderToCity.size());
             assert(order_2 < orderToCity.size());
 
-            auto city_1 = orderToCity[order_1];
-            auto city_2 = orderToCity[order_2];
+            city_1 = orderToCity[order_1];
+            city_2 = orderToCity[order_2];
 
             assert(city_1 < orderToCity.size());
             assert(city_2 < orderToCity.size());
@@ -138,7 +138,7 @@ public:
         }
     }
 
-    bool LineOrdered(Index c_1, Index c_2) const
+    bool LineOrdered(Index c_1, Index c_2) const override
     {
         return cityToOrder[c_1] < cityToOrder[c_2];
     }
