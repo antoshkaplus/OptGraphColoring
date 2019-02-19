@@ -76,3 +76,15 @@ inline grid::Grid<Index> NearestNeighbours(const vector<Point>& ps, Count count)
     }
     return res;
 }
+
+template <typename Tour>
+inline double MinDistanceEdge(const vector<Point>& ps, Tour& tour) {
+    double min = std::numeric_limits<double>::max();
+    auto city = 0;
+    for (auto i = 0; i < ps.size(); ++i) {
+        auto city_2 = tour.Next(city);
+        min = std::min(min, TSP_Distance(ps, city, city_2));
+        city = city_2;
+    }
+    return min;
+}

@@ -2,27 +2,12 @@
 
 #include <armadillo>
 #include <ant/grid/grid.hpp>
+#include <ant/optimization/sa/cooling_schedule.hpp>
+#include <ant/optimization/sa/history.hpp>
 
 #include "tsp.hpp"
 #include "tour/tsp_tour.hpp"
 #include "tour/tsp_two_level_tree_tour.hpp"
-
-inline uint64_t TSP_SA_Iterations(uint64_t city_count) {
-    return city_count * city_count * 100;
-}
-
-class CoolingSchedule {
-    double T_0 = 10000;
-public:
-
-    CoolingSchedule() {}
-    CoolingSchedule(double T_0) : T_0(T_0) {}
-
-    double temperature(double iter) const {
-        return T_0 / iter;
-    }
-};
-
 
 class DistanceCompute {
 
@@ -53,19 +38,32 @@ public:
 };
 
 
-template<class CoolingSchedule=::CoolingSchedule, class TDistance=DistanceCompute>
-struct TSP_SA : TSP_Solver {
+template<class TDistance=DistanceCompute>
+struct TSP_SA {
+private:
+    using History = ant::opt::sa::History;
+    using HistoryItem = ant::opt::sa::HistoryItem;
 
+    const vector<Point>& points;
     // 100000
     uint64_t iterations;
+    double alpha;
     std::chrono::duration<int> time_limit;
 
-    TSP_SA(uint64_t iterations, std::chrono::duration<int> time_limit) : iterations(iterations), time_limit(time_limit) {}
+    History history_;
 
+public:
+    TSP_SA(const vector<Point>& points, uint64_t iterations, std::chrono::duration<int> time_limit)
+        : points(points), iterations(iterations), time_limit(time_limit) {}
 
-    vector<City> solve(const vector<Point>& points) {
+    vector<City> solveKeepHistory(Count history_item_count) {
+        history_ = History(iterations, history_item_count);
+        return solve<true>();
+    }
 
-        CoolingSchedule cooling_schedule(iterations);
+    template <bool keepHistory = false>
+    vector<City> solve() {
+
         TDistance dist(points);
         TwoLevelTreeTour tour(points.size());
 
@@ -74,25 +72,58 @@ struct TSP_SA : TSP_Solver {
         uniform_real_distribution zero_one_distr {};
 
         auto start = std::chrono::system_clock::now();
+        auto total = TSP_Distance(points, tour.Order());
+
         for (uint64_t iter = 0; iter < iterations && std::chrono::system_clock::now() - start < time_limit; ++iter) {
-            auto c_1 = city_distr(rng);
-            auto c_2 = city_distr(rng);
 
-            if (c_1 == c_2) continue;
-            if (!tour.LineOrdered(c_1, c_2)) swap(c_1, c_2);
+            opt::sa::PolynomialCooling schedule {alpha};
+            double temperature = schedule.temperature(iter);
 
-            auto c_1_prev = tour.Prev(c_1);
-            auto c_2_next = tour.Next(c_2);
+            for (auto trial = 0; trial < 2*trial_count(); ++trial) {
 
-            double d_old = dist(c_1_prev, c_1) + dist(c_2, c_2_next);
-            double d_new = dist(c_1, c_2_next) + dist(c_2, c_1_prev);
+                auto c_1 = city_distr(rng);
+                auto c_2 = city_distr(rng);
 
-            double diff = d_new - d_old;
+                if (!tour.LineOrdered(c_1, c_2) || tour.Prev(c_1) == c_2) {
+                    continue;
+                }
 
-            if (diff < 0 || exp( -diff / cooling_schedule.temperature(iter) ) > zero_one_distr(rng)) {
-                tour.Reverse(c_1, c_2);
+                auto c_1_prev = tour.Prev(c_1);
+                auto c_2_next = tour.Next(c_2);
+
+                double d_old = dist(c_1_prev, c_1) + dist(c_2, c_2_next);
+                double d_new = dist(c_1, c_2_next) + dist(c_2, c_1_prev);
+
+                double diff = d_new - d_old;
+
+                if (diff < 0) {
+                    tour.Reverse(c_1, c_2);
+                    total += diff;
+                    history_[iter].AddCost(total);
+                } else {
+                    double accept_prob = exp( -(diff) / (2 * total / points.size() * temperature) );
+                    if constexpr (keepHistory) history_[iter].Add(total, temperature, accept_prob);
+
+                    if (accept_prob > zero_one_distr(rng)) {
+                        tour.Reverse(c_1, c_2);
+                        total += diff;
+                        history_[iter].AddCost(total);
+                    }
+                }
             }
         }
         return tour.Order();
+    }
+
+    Count trial_count() const {
+        return points.size();
+    }
+
+    void set_alpha(double alpha) {
+        this->alpha = alpha;
+    }
+
+    const ant::opt::sa::History& history() const {
+        return history_;
     }
 };

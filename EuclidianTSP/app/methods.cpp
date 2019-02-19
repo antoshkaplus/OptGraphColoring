@@ -61,7 +61,7 @@ int main(int argc, const char * argv[]) {
 #endif
 #ifdef SA
 
-        TSP_SA solver(TSP_SA_Iterations(problem.size()), std::chrono::hours(1));
+        TSP_SA solver(problem, TSP_SA_Iterations(problem.size()), std::chrono::hours(1));
 
 #endif
 #ifdef LIN_KERNIGHAN
@@ -88,6 +88,8 @@ int main(int argc, const char * argv[]) {
 
 #ifdef LIN_KERNIGHAN
         auto solution = tour.Order();
+#elif SA
+        auto solution = solver.solve();
 #else
         auto solution = solver.solve(problem);
 #endif
