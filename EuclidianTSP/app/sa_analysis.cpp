@@ -80,8 +80,35 @@ void FindCoolingSchedule() {
     for (auto d : distance) Println(cout, d);
 }
 
+void FindCoolingScheduleNew() {
+    ifstream in("data/tsp_1889_1");
+    auto problem = ReadProblem(in);
+    //auto iters = static_cast<Count>(std::pow(problem.size(), 1.2));
+
+
+    std::vector<Count> iters = {100, 120, 130};
+    std::vector<double> distance(3);
+
+    tbb::parallel_for(0, 3, [&](Index index) {
+        Println(cout, "started solving ", index);
+        TSP_SA solver(problem, iters[index], std::chrono::hours(1));
+        solver.set_alpha(0.9);
+        auto solution = solver.solveNew();
+        if (!isFeasibleSolution(problem, solution)) throw std::runtime_error("solution is not feasible " + std::to_string(index));
+        distance[index] = TSP_Distance(problem, solution);
+
+        Println(cout, "output result");
+        ofstream out("temp/history_tsp_33810_1_" + std::to_string(index));
+        for (auto& item : solver.history().items()) {
+            Println(out, item.best_cost, " ", item.accept_prob.min, " ", item.accept_prob.max, " ", item.temp.min, " ", item.temp.max);
+        }
+    });
+
+    for (auto d : distance) Println(cout, d);
+}
+
 
 
 int main(int argc, const char * argv[]) {
-    FindCoolingSchedule();
+    FindCoolingScheduleNew();
 }

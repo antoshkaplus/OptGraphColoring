@@ -126,4 +126,59 @@ public:
     const ant::opt::sa::History& history() const {
         return history_;
     }
+
+    vector<City> solveNew() {
+
+        history_ = History(iterations, 1000);
+
+        TDistance dist(points);
+        TwoLevelTreeTour tour(points.size());
+
+        default_random_engine rng;
+        uniform_int_distribution city_distr(0, Index(points.size()-1));
+        uniform_real_distribution zero_one_distr {};
+
+        auto total = TSP_Distance(points, tour.Order());
+
+        for (uint64_t iter = 0; iter < iterations; ++iter) {
+
+            opt::sa::ExponentialMultiplicativeCooling schedule {1, alpha};
+            double temperature = schedule.temperature(iter);
+
+            for (int64_t trial = 0; trial < 2*4*points.size()*points.size(); ++trial) {
+
+                auto c_1 = city_distr(rng);
+                auto c_2 = city_distr(rng);
+
+                if (!tour.LineOrdered(c_1, c_2) || tour.Prev(c_1) == c_2) {
+                    continue;
+                }
+
+                auto c_1_prev = tour.Prev(c_1);
+                auto c_2_next = tour.Next(c_2);
+
+                double d_old = dist(c_1_prev, c_1) + dist(c_2, c_2_next);
+                double d_new = dist(c_1, c_2_next) + dist(c_2, c_1_prev);
+
+                double diff = d_new - d_old;
+
+                if (diff < 0) {
+                    tour.Reverse(c_1, c_2);
+                    total += diff;
+                    history_[iter].AddCost(total);
+                } else {
+                    double accept_prob = exp( -(diff) / (2 * total / points.size() * temperature) );
+                    history_[iter].Add(total, temperature, accept_prob);
+
+                    if (accept_prob > zero_one_distr(rng)) {
+                        tour.Reverse(c_1, c_2);
+                        total += diff;
+                        history_[iter].AddCost(total);
+                    }
+                }
+            }
+        }
+        return tour.Order();
+    }
+
 };
