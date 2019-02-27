@@ -6,6 +6,33 @@
 #include "tsp_sa.hpp"
 
 
+// uuid is created per problem
+// print to file
+// print to log all phase changes.
+// we use boost logger as the fastest way to get it synchronized.
+
+
+
+struct SA_Config {
+
+};
+
+
+class SA_ConfigParser {
+
+
+    std::vector<SA_Config> Parse() {
+
+    }
+
+
+
+};
+
+
+
+
+
 void FindIterationCount() {
     vector<string> names = {"tsp_400_1", "tsp_1400_1", "tsp_4461_1", "tsp_14051_1", "tsp_33810_1"};
     vector<Problem> problems;

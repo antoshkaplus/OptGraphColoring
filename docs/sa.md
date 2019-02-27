@@ -23,3 +23,4 @@ can be more than enough.
 Oftentimes trial count is equal to problem size and in that case linear or polynomial
 schedule is used unless user rough solution is enough.
 
+User has to be very careful with the cost function as to take into account normalization.
