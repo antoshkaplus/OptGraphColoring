@@ -7,7 +7,7 @@
 #include "tsp_nearest_insertion.hpp"
 #include "tsp_farthest_insertion.hpp"
 #include "tsp_ant_colony.hpp"
-#include "tsp_sa.hpp"
+#include "sa/sa.hpp"
 #include "tour/tsp_vector_tour.hpp"
 #include "tsp_lin_kernighan_base.hpp"
 

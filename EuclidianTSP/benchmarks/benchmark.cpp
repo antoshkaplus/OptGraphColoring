@@ -4,7 +4,7 @@
 #include <ant/grid/grid.hpp>
 
 #include "tsp.hpp"
-#include "tsp_sa.hpp"
+#include "sa/sa.hpp"
 #include "tour/tsp_tour.hpp"
 #include "tour/tsp_vector_tour.hpp"
 #include "tour/tsp_tour_reverse.hpp"
