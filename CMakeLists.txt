@@ -1,5 +1,7 @@
 # cmake -DCMAKE_BUILD_TYPE=Debug
 # cmake -DCMAKE_BUILD_TYPE=Release
+#
+# -fconcepts - works only for gcc and should not be used
 
 cmake_minimum_required(VERSION 3.1)
 project(GraphColoring)
