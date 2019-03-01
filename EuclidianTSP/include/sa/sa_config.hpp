@@ -23,6 +23,8 @@ struct SA_Task {
 };
 
 class SA_ConfigParser {
+    std::string problem_dir_;
+    std::string result_dir_;
 
 public:
     std::vector<SA_Task> Parse(const std::string& config_path) {
@@ -30,12 +32,15 @@ public:
         boost::property_tree::ptree pt;
         boost::property_tree::read_json(config_path, pt);
 
+        problem_dir_ = pt.get<std::string>("problem_dir");
+        result_dir_ = pt.get<std::string>("result_dir");
+
         std::vector<SA_Task> tasks;
         for (auto& v : pt.get_child("tasks"))
         {
             auto c = v.second;
 
-            std::string cooling = c.get<std::string>("cooling");
+            auto cooling = c.get<std::string>("cooling");
             Duration time_limit = ParseDuration(c.get<std::string>("time_limit"));
 
             auto extract_values = ranges::view::transform([](auto& t) { return t.second.template get_value<double>(); });
@@ -60,6 +65,12 @@ public:
         return tasks;
     }
 
+    const std::string& problem_dir() const {
+        return problem_dir_;
+    }
 
+    const std::string& result_dir() const {
+        return result_dir_;
+    }
 
 };

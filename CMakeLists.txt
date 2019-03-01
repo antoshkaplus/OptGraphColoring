@@ -30,6 +30,8 @@ endmacro()
 include_directories("/usr/local/include")
 include_directories("/usr/include")
 
+include_directories("Common/include")
+
 list(APPEND COIN_LIBS CoinUtils Cbc Clp OsiClp Cgl)
 
 add_subdirectory(EuclidianTSP)

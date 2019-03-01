@@ -1,7 +1,6 @@
 {
     "problem_dir": "./data",
     "result_dir": "./temp",
-    "log": "./temp/log.txt",
     "tasks":
     [
         {
