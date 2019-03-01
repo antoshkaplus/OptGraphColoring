@@ -4,13 +4,13 @@
 cmake_minimum_required(VERSION 3.1)
 project(GraphColoring)
 
-set(CMAKE_CXX_FLAGS "-std=c++2a -Wno-sign-compare -Wall -Werror")
+set(CMAKE_CXX_FLAGS "-std=c++2a -march=native -Wno-sign-compare -Wall -Werror")
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "(Clang|AppleClang)")
     string(APPEND CMAKE_CXX_FLAGS " -Wno-unused-private-field -Wno-missing-braces")
 endif()
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -g")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3 -march=native -DNDEBUG")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG")
 
 macro(set_output_dirs)
     set(BinDir ${CMAKE_CURRENT_SOURCE_DIR}/bin)

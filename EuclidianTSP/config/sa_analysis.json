@@ -10,7 +10,7 @@
             "trials_pr_sz_pow": [1],
             "alpha": [1, 1.5, 2],
             "no_improvement_iter_limit": [2000, 3000, 5000],
-            "problems": ["tsp_2103_1", "tsp_9432_1", "tsp_33810_1"]
+            "problem": ["tsp_2103_1", "tsp_9432_1", "tsp_33810_1"]
         },
         {
             "cooling": "exponential",
@@ -18,7 +18,7 @@
             "time_limit": "4h",
             "trials_pr_sz_pow": [1.5, 1.7, 2],
             "no_improvement_iter_limit": [5, 8],
-            "problems": ["tsp_2103_1", "tsp_9432_1", "tsp_33810_1"]
+            "problem": ["tsp_2103_1", "tsp_9432_1", "tsp_33810_1"]
         }
     ]
 }
