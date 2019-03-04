@@ -9,6 +9,7 @@ project(GraphColoring)
 set(CMAKE_CXX_FLAGS "-std=c++2a -march=native -Wno-sign-compare -Wall -Werror")
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "(Clang|AppleClang)")
     string(APPEND CMAKE_CXX_FLAGS " -Wno-unused-private-field -Wno-missing-braces")
+    link_libraries(libc++fs.a)
 endif()
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -g")

@@ -51,7 +51,8 @@ private:
     uint64_t no_improvement_iter_limit;
     uint64_t trials;
 
-    std::chrono::duration<int64_t> time_limit;
+    Duration time_limit;
+    bool time_limit_reached_ = false;
 
     CoolingSchedule cooling_schedule;
 
@@ -59,9 +60,10 @@ private:
 
 public:
     TSP_SA(const vector<Point>& points, uint64_t no_improvement_iter_limit, uint64_t trials,
-           std::chrono::duration<int64_t> time_limit)
+           Duration time_limit, const CoolingSchedule& cooling_schedule)
 
-           : points(points), no_improvement_iter_limit(no_improvement_iter_limit), trials(trials), time_limit(time_limit) {}
+           : points(points), no_improvement_iter_limit(no_improvement_iter_limit),
+             trials(trials), time_limit(time_limit), cooling_schedule(cooling_schedule) {}
 
     vector<City> SolveKeepHistory(Count history_item_count) override {
         history_ = History(no_improvement_iter_limit, history_item_count);
@@ -76,8 +78,8 @@ public:
         return history_;
     }
 
-    void set_cooling_schedule(CoolingSchedule& cooling_schedule) {
-        this->cooling_schedule = cooling_schedule;
+    bool time_limit_reached() const override {
+        return time_limit_reached_;
     }
 
 private:
@@ -91,12 +93,15 @@ private:
         uniform_int_distribution city_distr(0, Index(points.size()-1));
         uniform_real_distribution zero_one_distr {};
 
-        auto start = std::chrono::system_clock::now();
-        auto total = TSP_Distance(points, tour.Order());
+        auto saved_order = tour.Order();
+        auto saved_total = TSP_Distance(points, saved_order);
+        auto total = saved_total;
+        auto best_total = total;
 
         uint64_t iterations = no_improvement_iter_limit;
 
-        for (uint64_t iter = 0; iter < iterations && std::chrono::system_clock::now() - start < time_limit; ++iter) {
+        Timer timer(time_limit);
+        for (uint64_t iter = 0; iter < iterations && !timer.timeout(); ++iter) {
 
             auto temperature = cooling_schedule.temperature(iter);
             for (auto trial = 0; trial < 2*trials; ++trial) {
@@ -117,24 +122,47 @@ private:
                 double diff = d_new - d_old;
 
                 if (diff < 0) {
-                    iterations = iter + no_improvement_iter_limit;
-                    if constexpr (keepHistory) history_.IncreaseIterations(iterations);
 
                     tour.Reverse(c_1, c_2);
                     total += diff;
-                    history_[iter].AddCost(total);
+
+                    if (total < best_total) {
+                        best_total = total;
+                        iterations = iter + no_improvement_iter_limit + 1;
+                        if constexpr (keepHistory) history_.IncreaseIterations(iterations);
+                    }
+
+                    if constexpr (keepHistory) history_[iter].AddCost(total);
                 } else {
                     double accept_prob = exp( -(diff) / (2 * total / points.size() * temperature) );
                     if constexpr (keepHistory) history_[iter].Add(total, temperature, accept_prob);
 
                     if (accept_prob > zero_one_distr(rng)) {
+
+                        if (total < saved_total) {
+                            // from here saved total equals best_total
+                            assert(best_total == total);
+                            saved_total = total;
+                            saved_order = tour.Order();
+                        }
+
                         tour.Reverse(c_1, c_2);
                         total += diff;
-                        history_[iter].AddCost(total);
+                        if constexpr (keepHistory) history_[iter].AddCost(total);
                     }
                 }
             }
         }
-        return tour.Order();
+
+        if (total < saved_total) {
+            saved_total = total;
+            saved_order = tour.Order();
+        }
+
+        if (timer.timeout()) {
+            time_limit_reached_ = true;
+        }
+
+        return saved_order;
     }
 };

@@ -281,7 +281,7 @@ public:
         p.reverse = !p.reverse;
     }
 
-    std::experimental::optional<ParentIt> SplitAt_2(Index a) {
+    std::optional<ParentIt> SplitAt_2(Index a) {
         auto parent = elements[a].parent;
 
         // also works if a single element

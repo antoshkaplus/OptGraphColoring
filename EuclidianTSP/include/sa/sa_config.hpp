@@ -17,10 +17,22 @@ struct SA_Config {
 
 };
 
+std::ostream& operator<<(std::ostream& out, const SA_Config& config) {
+    Println(out, config.cooling, " ", FormatDuration(config.time_limit),
+        " trials_pr_sz_pow: ", config.trials_pr_sz_pow, " alpha: ", config.alpha,
+        " no_improvement_iter_limit: ", config.no_improvement_iter_limit);
+    return out;
+}
+
 struct SA_Task {
     SA_Config config;
     std::string problem_name;
 };
+
+std::ostream& operator<<(std::ostream& out, const SA_Task& task) {
+    Println(out, "task begin: ", task.problem_name, "\n", task.config, "task end: ", task.problem_name);
+    return out;
+}
 
 class SA_ConfigParser {
     std::string problem_dir_;

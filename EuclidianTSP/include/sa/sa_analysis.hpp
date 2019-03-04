@@ -4,90 +4,43 @@
 
 #include <experimental/filesystem>
 
-#include <boost/algorithm/string.hpp>
-#include <boost/log/sources/logger.hpp>
-#include <boost/log/utility/setup/file.hpp>
-#include <boost/log/utility/setup/common_attributes.hpp>
-
 #include "report.hpp"
 
-#include "sa/sa.hpp"
-#include "sa/sa_config.hpp"
-
-// uuid is created per problem
-// print to file
-// print to log all phase changes.
-// we use boost logger as the fastest way to get it synchronized.
-
-//void FindCoolingSchedule() {
-//    ifstream in("data/tsp_33810_1");
-//    auto problem = ReadProblem(in);
-//    //auto iters = static_cast<Count>(std::pow(problem.size(), 1.2));
-//
-//    auto iters = 10000*10;
-//
-//    std::vector<double> power = {1.0, 1.2, 1.5};
-//    std::vector<double> distance(3);
-//
-//    tbb::parallel_for(0, 3, [&](Index index) {
-//        Println(cout, "started solving ", index);
-//        TSP_SA solver(problem, iters, std::chrono::hours(1));
-//        solver.set_alpha(power[index]);
-//        auto solution = solver.solveKeepHistory(1000);
-//        if (!isFeasibleSolution(problem, solution)) throw std::runtime_error("solution is not feasible " + std::to_string(index));
-//        distance[index] = TSP_Distance(problem, solution);
-//
-//        Println(cout, "output result");
-//        ofstream out("temp/history_tsp_33810_1_" + std::to_string(index));
-//        for (auto& item : solver.history().items()) {
-//            Println(out, item.best_cost, " ", item.accept_prob.min, " ", item.accept_prob.max, " ", item.temp.min, " ", item.temp.max);
-//        }
-//    });
-//
-//    for (auto d : distance) Println(cout, d);
-//}
-
-//void FindCoolingScheduleNew() {
-//    ifstream in("data/tsp_1889_1");
-//    auto problem = ReadProblem(in);
-//    //auto iters = static_cast<Count>(std::pow(problem.size(), 1.2));
-//
-//
-//    std::vector<Count> iters = {100, 120, 130};
-//    std::vector<double> distance(3);
-//
-//    tbb::parallel_for(0, 3, [&](Index index) {
-//        Println(cout, "started solving ", index);
-//        TSP_SA solver(problem, iters[index], std::chrono::hours(1));
-//        solver.set_alpha(0.9);
-//        auto solution = solver.solveNew();
-//        if (!isFeasibleSolution(problem, solution)) throw std::runtime_error("solution is not feasible " + std::to_string(index));
-//        distance[index] = TSP_Distance(problem, solution);
-//
-//        Println(cout, "output result");
-//        ofstream out("temp/history_tsp_33810_1_" + std::to_string(index));
-//        for (auto& item : solver.history().items()) {
-//            Println(out, item.best_cost, " ", item.accept_prob.min, " ", item.accept_prob.max, " ", item.temp.min, " ", item.temp.max);
-//        }
-//    });
-//
-//    for (auto d : distance) Println(cout, d);
-//}
+#include "sa.hpp"
+#include "sa_config.hpp"
+#include "sa_value.hpp"
 
 
+void Run_SA_Task(std::string_view task_id, report::Logger& logger, const SA_Task& task, std::string_view problem_dir, std::string_view result_dir) {
+    logger.Log(task_id, " start: ", task);
 
-void Run_SA_Task(SA_Task task) {
-    TSP_SA solver(problem, iters, std::chrono::hours(1));
-    solver.set_alpha(power[index]);
-    auto solution = solver.solveKeepHistory(1000);
-    if (!isFeasibleSolution(problem, solution)) throw std::runtime_error("solution is not feasible " + std::to_string(index));
-    distance[index] = TSP_Distance(problem, solution);
+    std::experimental::filesystem::path p{problem_dir};
+    p /= task.problem_name;
+    std::ifstream in(p);
 
-    Println(cout, "output result");
-    ofstream out("temp/history_tsp_33810_1_" + std::to_string(index));
+    auto problem = ReadProblem(in);
+
+    logger.Log(task_id, " solving");
+    SA_Value solver(task.config, problem);
+
+    auto solution = solver.SolveKeepHistory(1000);
+
+    if (!isFeasibleSolution(problem, solution)) {
+        throw std::runtime_error(std::string("solution is not feasible ") + std::string(task_id));
+    }
+    auto distance = TSP_Distance(problem, solution);
+
+    logger.Log(task_id, " result: ", distance, " ", solver.time_limit_reached() ? "time_limit" : "");
+
+    p = result_dir;
+    p /= task_id;
+    ofstream out(p);
+    Println(out, task);
+    Println(out, "iterations: ", solver.history().iter_count());
     for (auto& item : solver.history().items()) {
         Println(out, item.best_cost, " ", item.accept_prob.min, " ", item.accept_prob.max, " ", item.temp.min, " ", item.temp.max);
     }
+    logger.Log(task_id, " reported");
 }
 
 
@@ -97,10 +50,6 @@ void SA_Analyze(const std::string& config_path) {
 
     auto problem_dir = parser.problem_dir();
     auto result_dir = parser.result_dir();
-
-    // inside this dir I need to put log file with what's going on
-    // also multiple files corresponding to running each configuration
-
 
     std::experimental::filesystem::path p(config_path);
     auto pp = p.filename().string();
@@ -113,17 +62,18 @@ void SA_Analyze(const std::string& config_path) {
 
     std::experimental::filesystem::create_directories(analysis_path);
 
-    // we have now directory where we gonna store everything we encounter
-    // now we have one log file where we log our progress
-    // and we also do our jobs in parallel
+    auto log_path = analysis_path;
+    log_path /= "log";
 
-    boost::log::add_file_log();
+    report::Logger logger(log_path);
 
-    boost::log::sources::logger_mt logger;
-
-    tbb::parallel_for(tasks.begin(), tasks.end(), [&](SA_Task) {
-
-
-
+    std::atomic_int task_id = 0;
+    tbb::parallel_for_each(tasks.begin(), tasks.end(), [&](const SA_Task& task) {
+        auto task_id_str = std::to_string(task_id++) + "_" + task.config.cooling + "_" + task.problem_name;
+        try {
+            Run_SA_Task(task_id_str, logger, task, problem_dir, analysis_path.string());
+        } catch (std::exception& ex) {
+            logger.Log(task_id_str, " failed");
+        }
     });
 }

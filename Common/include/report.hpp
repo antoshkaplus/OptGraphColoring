@@ -1,5 +1,7 @@
 #pragma once
 
+#include "logger.hpp"
+
 namespace report {
 
     std::string EraseEnd(std::string s, const std::string& rm) {
@@ -22,23 +24,9 @@ namespace report {
         Index index = 1;
         auto prev = p;
         while (std::experimental::filesystem::exists(p)) {
-            p = prev;
-            p += "__" + std::to_string(index);
+            p = prev.string() + "__" + std::to_string(index);
         }
         return p;
     }
 
 }
-//
-//time_t now = std::time(0);
-//char buffer[64];
-//std::strftime(buffer, sizeof(buffer), "__%Y_%m_%d_%H_%M", localtime(&now));
-//std::string analysis_dir = pp + buffer + "%s";
-
-// have to increament path
-
-//std::experimental::filesystem::path analysis_path{result_dir};
-//for (;;) {
-//auto prev = analysis_path;
-//analysis_path /= analysis_dir
-//}
