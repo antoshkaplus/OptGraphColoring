@@ -43,7 +43,7 @@ struct SA_Value final : SA_Interface {
 private:
     template<typename CoolingSchedule>
     void Init(const SA_Config& config, CoolingSchedule cooling, const std::vector<Point>& ps) {
-        ptr.reset(new TSP_SA(ps, config.no_improvement_iter_limit,
+        ptr.reset(new TSP_SA<CoolingSchedule>(ps, config.no_improvement_iter_limit,
             static_cast<int64_t>(std::pow(ps.size(), config.trials_pr_sz_pow)), config.time_limit, cooling));
     }
 };
