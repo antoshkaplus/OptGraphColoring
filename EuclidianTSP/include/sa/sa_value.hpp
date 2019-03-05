@@ -32,8 +32,12 @@ struct SA_Value final : SA_Interface {
         return ptr->history();
     }
 
-    virtual bool time_limit_reached() const override {
+    bool time_limit_reached() const override {
         return ptr->time_limit_reached();
+    }
+
+    Duration time_spent() const override {
+        return ptr->time_spent();
     }
 
 private:

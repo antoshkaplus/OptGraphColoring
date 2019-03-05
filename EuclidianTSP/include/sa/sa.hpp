@@ -52,11 +52,14 @@ private:
     uint64_t trials;
 
     Duration time_limit;
-    bool time_limit_reached_ = false;
 
     CoolingSchedule cooling_schedule;
+    default_random_engine rng;
 
     History history_;
+    Duration time_spent_;
+    bool time_limit_reached_ = false;
+
 
 public:
     TSP_SA(const vector<Point>& points, uint64_t no_improvement_iter_limit, uint64_t trials,
@@ -82,14 +85,18 @@ public:
         return time_limit_reached_;
     }
 
+    Duration time_spent() const override {
+        return time_spent_;
+    }
+
 private:
     template <bool keepHistory = false>
     vector<City> solve() {
 
         TDistance dist(points);
-        TwoLevelTreeTour tour(points.size());
 
-        default_random_engine rng;
+        TwoLevelTreeTour tour = Init(points.size());
+
         uniform_int_distribution city_distr(0, Index(points.size()-1));
         uniform_real_distribution zero_one_distr {};
 
@@ -101,6 +108,8 @@ private:
         uint64_t iterations = no_improvement_iter_limit;
 
         Timer timer(time_limit);
+        auto start = std::chrono::steady_clock::now();
+
         for (uint64_t iter = 0; iter < iterations && !timer.timeout(); ++iter) {
 
             auto temperature = cooling_schedule.temperature(iter);
@@ -163,6 +172,16 @@ private:
             time_limit_reached_ = true;
         }
 
+        time_spent_ = std::chrono::steady_clock::now() - start;
+
         return saved_order;
     }
+
+    TwoLevelTreeTour Init(Count problem_size) {
+        std::vector<City> order(problem_size);
+        std::iota(order.begin(), order.end(), 0);
+        std::shuffle(order.begin(), order.end(), rng);
+        return TwoLevelTreeTour{order};
+    }
+
 };

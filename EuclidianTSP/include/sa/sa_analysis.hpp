@@ -30,13 +30,17 @@ void Run_SA_Task(std::string_view task_id, report::Logger& logger, const SA_Task
     }
     auto distance = TSP_Distance(problem, solution);
 
-    logger.Log(task_id, " result: ", distance, " ", solver.time_limit_reached() ? "time_limit" : "");
+    logger.Log(task_id,
+        " result: ", distance,
+        " spent: ", FormatDuration(solver.time_spent()),
+        solver.time_limit_reached() ? " time_limit" : "");
 
     p = result_dir;
     p /= task_id;
     ofstream out(p);
     Println(out, task);
     Println(out, "iterations: ", solver.history().iter_count());
+    Println(out, "time: ", FormatDuration(solver.time_spent()));
     for (auto& item : solver.history().items()) {
         Println(out, item.best_cost, " ", item.accept_prob.min, " ", item.accept_prob.max, " ", item.temp.min, " ", item.temp.max);
     }

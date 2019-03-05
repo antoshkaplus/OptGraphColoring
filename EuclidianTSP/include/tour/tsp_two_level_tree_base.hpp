@@ -85,6 +85,15 @@ public:
         }
     }
 
+    DISALLOW_COPY_AND_ASSIGN(TwoLevelTreeBase);
+
+    TwoLevelTreeBase(TwoLevelTreeBase&& other)
+        : parents(std::move(other.parents)),
+          indexer(parents, [](ParentIt it) -> Index& { return it->pos; }),
+          elements(std::move(other.elements)) {
+    }
+
+
     Index Next(Index city) const {
         auto& elem = elements[city];
         return elem.parent->reverse ? elem.prev : elem.next;
