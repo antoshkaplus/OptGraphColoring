@@ -13,6 +13,8 @@ class LinKernighanBase {
 
     std::chrono::system_clock::duration time_limit = std::chrono::system_clock::duration::max();
 
+    bool time_limit_reached_ = false;
+
 public:
     LinKernighanBase(Tour& tour, const vector<Point>& ps, const grid::Grid<Index>& nearestNeighbours, double epsilon)
         : tour(tour), ps(ps), nearestNeighbours(nearestNeighbours), epsilon(epsilon) {}
@@ -20,6 +22,10 @@ public:
 
     void set_time_limit(std::chrono::system_clock::duration time_limit) {
         this->time_limit = time_limit;
+    }
+
+    bool time_limit_reached() const {
+        return time_limit_reached_;
     }
 
     template <bool kVerbose = false>
@@ -134,6 +140,10 @@ public:
                 ts[0] = ts[1];
                 ts.resize(1);
             }
+        }
+
+        if (std::chrono::system_clock::now() - start_timestamp > time_limit) {
+            time_limit_reached_ = true;
         }
     }
 

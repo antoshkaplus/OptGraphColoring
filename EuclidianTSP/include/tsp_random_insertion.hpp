@@ -70,6 +70,6 @@ struct TSP_RandomInsertion : TSP_InsertionSolver {
                 tour.insertAfter(ind_in, city_out);
             }
         }
-        return tour;
+        return std::move(tour);
     }
 };
