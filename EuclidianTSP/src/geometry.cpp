@@ -6,7 +6,7 @@
 //  Copyright (c) 2013 Anton Logunov. All rights reserved.
 //
 
-#include "geometry.hpp"
+#include "tsp_util.hpp"
 
 Point operator-(const Point& p1, const Point& p2) {
     return Point(p1.x-p2.x, p1.y-p2.y);

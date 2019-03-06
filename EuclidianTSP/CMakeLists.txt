@@ -1,4 +1,10 @@
 
+cmake_minimum_required(VERSION 3.1)
+project(EuclidianTSP)
+
+include(../Common/cmake/CMakeLists.txt)
+include_directories("../Common/include")
+
 file(GLOB SOURCE_FILES "./src/*.cpp")
 file(GLOB HEADER_FILES "./include/*.hpp")
 
@@ -74,3 +80,10 @@ target_compile_definitions(tsp_sa PUBLIC -DSA)
 add_executable(tsp_lin_kernighan app/methods.cpp)
 target_link_libraries(tsp_lin_kernighan ant)
 target_compile_definitions(tsp_lin_kernighan PUBLIC -DLIN_KERNIGHAN)
+
+# other
+
+file(GLOB_RECURSE OTHER_LKH_SOURCE_FILES "./other/LKH-2.0.9/SRC/*")
+add_executable(other_lkh ${OTHER_LKH_SOURCE_FILES})
+target_include_directories(other_lkh PRIVATE "./other/LKH-2.0.9/SRC/INCLUDE")
+target_link_libraries(other_lkh m)

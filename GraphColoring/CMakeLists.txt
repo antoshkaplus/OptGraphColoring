@@ -1,4 +1,10 @@
 
+cmake_minimum_required(VERSION 3.1)
+project(GraphColoring)
+
+include(../Common)
+include(../Common/build/CMakeLists.txt)
+
 file(GLOB SOLVER_FILES "app/solver.cpp")
 
 find_library(ANT_LIBRARY ant)
