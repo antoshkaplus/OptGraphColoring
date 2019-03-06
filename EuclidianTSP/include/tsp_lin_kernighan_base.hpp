@@ -14,6 +14,8 @@ class LinKernighanBase {
     std::chrono::system_clock::duration time_limit = std::chrono::system_clock::duration::max();
 
     bool time_limit_reached_ = false;
+    int64_t iter_count_ = 0;
+    std::vector<Count> close_count_;
 
 public:
     LinKernighanBase(Tour& tour, const vector<Point>& ps, const grid::Grid<Index>& nearestNeighbours, double epsilon)
@@ -28,6 +30,16 @@ public:
         return time_limit_reached_;
     }
 
+    auto iter_count() const {
+        return iter_count_;
+    }
+
+    const auto& close_count() const {
+        return close_count_;
+    }
+
+    // bottleneck is here unable to get to large K because of it.
+    // if only could do it faster than n*log (n) or something
     template <bool kVerbose = false>
     bool CanClose(const vector<Index>& ts) {
         if (ts.size() % 2 != 0 || ts.size() < 4) return false;
@@ -87,6 +99,9 @@ public:
     template <bool kVerbose = false>
     void Close(const vector<Index>& ts) {
 
+        close_count_.resize(std::max(ts.size(), close_count_.size()), 0);
+        ++close_count_[ts.size()-1];
+
         auto i_1 = ts[0];
         for (auto i = 1; i < ts.size()-2; i+=2) {
             auto i_2 = ts[i];
@@ -115,6 +130,37 @@ public:
             for (auto i = 0; i < ps.size(); ++i) {
                 // should I try Prev too ?
                 ts.push_back(tour.Next(ts.back()));
+                ++iter_count_;
+
+                double before = 0; (void)before;
+                if constexpr (kVerbose) before = TSP_Distance(ps, tour.Order());
+
+                if (TryImprove<kVerbose>(ts)) {
+                    CheckGain<kVerbose>(ts);
+                    Close<kVerbose>(ts);
+
+                    if constexpr (kVerbose) {
+                        Println(cout, "new tour:");
+                        Println(cout, tour.Order());
+
+                        assert(!isFeasibleSolution(ps, tour.Order()));
+
+                        auto after = TSP_Distance(ps, tour.Order());
+                        assert(after < before);
+                    }
+
+                    again = true;
+                    break;
+                }
+
+                ts[0] = ts[1];
+                ts.resize(1);
+            }
+
+            for (auto i = 0; i < ps.size(); ++i) {
+                // should I try Prev too ?
+                ts.push_back(tour.Prev(ts.back()));
+                ++iter_count_;
 
                 double before = 0; (void)before;
                 if constexpr (kVerbose) before = TSP_Distance(ps, tour.Order());
@@ -189,7 +235,8 @@ private:
         auto row = ts.back();
 
         auto try_count = nearestNeighbours.col_count();
-        if (ts.size() >= 5) try_count = 1;
+        // the bigger the number the better the result
+        if (ts.size() >= 60) try_count = 1;
 
         for (auto col = 0; col < try_count; ++col) {
             // city will be added

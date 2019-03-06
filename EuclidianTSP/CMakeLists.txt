@@ -43,6 +43,9 @@ target_link_libraries(TSP_TEST gtest pthread)
 add_executable(tsp_sa_analysis app/sa_analysis.cpp)
 target_link_libraries(tsp_sa_analysis ant tbb)
 
+add_executable(lk_analysis app/lk_analysis.cpp)
+target_link_libraries(lk_analysis ant)
+
 # methods
 
 add_executable(tsp_simplex_ins app/methods.cpp)

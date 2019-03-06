@@ -24,6 +24,12 @@ inline Problem ReadProblem(istream& in) {
     return pr;
 }
 
+inline Problem ReadProblem(const std::string& filename) {
+    std::ifstream in(filename);
+    if (in.fail()) throw std::runtime_error("unable to open file: " + filename);
+    return ReadProblem(in);
+}
+
 inline double TSP_Distance(const vector<Point>& pr, const vector<Index>& sol) {
     return accumulate(sol.begin(), sol.end(), make_pair(sol.back(), 0.), [&](auto pair, auto index) {
         return make_pair(index, pair.second + pr[index].Distance(pr[pair.first]));
