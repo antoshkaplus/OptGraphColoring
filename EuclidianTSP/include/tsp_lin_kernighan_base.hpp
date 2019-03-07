@@ -17,6 +17,63 @@ class LinKernighanBase {
     int64_t iter_count_ = 0;
     std::vector<Count> close_count_;
 
+    class OptSet {
+
+        using Set = std::set<Index, std::function<bool(Index, Index)>>;
+
+        std::vector<Index> cities_;
+        Set ordered_{[](Index, Index) {return true;}};
+    public:
+
+        OptSet(Tour& tour) {
+            ordered_ = Set([&](City c_1, City c_2) {
+                return tour.LineOrdered(c_1, c_2);
+            });
+        }
+
+        void Push(City city) {
+            cities_.push_back(city);
+            ordered_.insert(city);
+        }
+
+        void Pop() {
+            ordered_.erase(cities_.back());
+            cities_.pop_back();
+        }
+
+        const vector<City>& cities() const {
+            return cities_;
+        }
+
+        const Set& ordered() const {
+            return ordered_;
+        }
+
+        void ToOne() {
+            cities_[0] = cities_[1];
+            cities_.resize(1);
+
+            ordered_.clear();
+            ordered_.insert(cities_.back());
+        }
+
+        City LinePrev(City c_1) const {
+            auto it = ordered_.find(c_1);
+            if (it == ordered_.begin()) {
+                it = ordered_.end();
+            }
+            return *std::prev(it);
+        }
+
+        City LineNext(City c_1) const {
+            auto it = std::next(ordered_.find(c_1));
+            if (it == ordered_.end()) {
+                return *ordered_.begin();
+            }
+            return *it;
+        }
+    };
+
 public:
     LinKernighanBase(Tour& tour, const vector<Point>& ps, const grid::Grid<Index>& nearestNeighbours, double epsilon)
         : tour(tour), ps(ps), nearestNeighbours(nearestNeighbours), epsilon(epsilon) {}
@@ -37,6 +94,51 @@ public:
     const auto& close_count() const {
         return close_count_;
     }
+
+    bool CanClose(const OptSet& ts) {
+
+        auto& cs = ts.cities();
+
+        auto last = cs.back();
+        auto first = cs.front();
+
+        Println(cout, first, " ", last, " ", ts.LinePrev(last), " ", ts.LineNext(last));
+        if (ts.LinePrev(last) == first || ts.LineNext(last) == first) {
+            return false;
+        }
+
+        if (ts.cities().size() == 4) return true;
+
+        City anotherLast;
+        {
+            auto c_1 = ts.LinePrev(last);
+            auto c_2 = ts.LineNext(last);
+            anotherLast = (c_1 == cs[cs.size()-2] ? c_2 : c_1);
+        }
+        City anotherFirst;
+        {
+            auto c_1 = ts.LinePrev(first);
+            auto c_2 = ts.LineNext(first);
+            anotherFirst = (c_1 == cs[1] ? c_2 : c_1);
+        }
+
+        // keep indices around
+        auto anotherFirstIndex = 0;
+        while (cs[anotherFirstIndex] != anotherFirst) ++anotherFirstIndex;
+
+        if (cs[added_endpoint(anotherFirstIndex, cs.size())] == anotherLast)
+        {
+            Println(cout, "lol ", anotherLast, " ", anotherFirst,
+                " next: ", cs[(anotherFirstIndex + 1) % cs.size()],
+                " prev: ", cs[(anotherFirstIndex + cs.size() - 1) % cs.size()]);
+            return false;
+        }
+
+        return true;
+
+    }
+
+
 
     // bottleneck is here unable to get to large K because of it.
     // if only could do it faster than n*log (n) or something
@@ -124,20 +226,20 @@ public:
         while (again && std::chrono::system_clock::now() - start_timestamp < time_limit) {
             again = false;
 
-            vector<Index> ts;
-            ts.push_back(distr(rng));
+            OptSet ts(tour);
+            ts.Push(distr(rng));
 
             for (auto i = 0; i < ps.size(); ++i) {
                 // should I try Prev too ?
-                ts.push_back(tour.Next(ts.back()));
+                ts.Push(tour.Next(ts.cities().back()));
                 ++iter_count_;
 
                 double before = 0; (void)before;
                 if constexpr (kVerbose) before = TSP_Distance(ps, tour.Order());
 
                 if (TryImprove<kVerbose>(ts)) {
-                    CheckGain<kVerbose>(ts);
-                    Close<kVerbose>(ts);
+                    CheckGain<kVerbose>(ts.cities());
+                    Close<kVerbose>(ts.cities());
 
                     if constexpr (kVerbose) {
                         Println(cout, "new tour:");
@@ -153,39 +255,10 @@ public:
                     break;
                 }
 
-                ts[0] = ts[1];
-                ts.resize(1);
+                ts.ToOne();
             }
 
-            for (auto i = 0; i < ps.size(); ++i) {
-                // should I try Prev too ?
-                ts.push_back(tour.Prev(ts.back()));
-                ++iter_count_;
-
-                double before = 0; (void)before;
-                if constexpr (kVerbose) before = TSP_Distance(ps, tour.Order());
-
-                if (TryImprove<kVerbose>(ts)) {
-                    CheckGain<kVerbose>(ts);
-                    Close<kVerbose>(ts);
-
-                    if constexpr (kVerbose) {
-                        Println(cout, "new tour:");
-                        Println(cout, tour.Order());
-
-                        assert(!isFeasibleSolution(ps, tour.Order()));
-
-                        auto after = TSP_Distance(ps, tour.Order());
-                        assert(after < before);
-                    }
-
-                    again = true;
-                    break;
-                }
-
-                ts[0] = ts[1];
-                ts.resize(1);
-            }
+            // bring back prev guy
         }
 
         if (std::chrono::system_clock::now() - start_timestamp > time_limit) {
@@ -194,13 +267,13 @@ public:
     }
 
     template <bool kVerbose>
-    bool TryImprove(vector<Index>& ts) {
-        assert(ts.size() == 2);
+    bool TryImprove(OptSet& ts) {
+        assert(ts.cities().size() == 2);
 
         // how big by absolute value negative value is
-        double gain = -Distance(ts[0], ts[1]);
+        double gain = -Distance(ts.cities()[0], ts.cities()[1]);
         if constexpr (kVerbose) {
-            Println(cout, ts[0], " ", ts[1], " gain: ", gain);
+            Println(cout, ts.cities()[0], " ", ts.cities()[1], " gain: ", gain);
         }
 
         return TryImprove<kVerbose>(ts, gain);
@@ -225,27 +298,28 @@ private:
     }
 
     template <bool kVerbose>
-    bool TryImprove(vector<Index>& ts, double gain) {
+    bool TryImprove(OptSet& ts, double gain) {
         if constexpr (kVerbose) {
             Println(cout, "try improve: ", " gain: ", gain);
-            Println(cout, ts);
+            Println(cout, ts.cities());
         }
 
         // this shit is actually should be recursive probably
-        auto row = ts.back();
+        auto row = ts.cities().back();
 
         auto try_count = nearestNeighbours.col_count();
         // the bigger the number the better the result
-        if (ts.size() >= 60) try_count = 1;
+        if (ts.cities().size() >= 60) try_count = 1;
 
         for (auto col = 0; col < try_count; ++col) {
             // city will be added
             auto city = nearestNeighbours(row, col);
 
-            if (tour.Prev(city) == ts.back() || tour.Next(city) == ts.back()) continue;
-            if (find(ts.begin(), ts.end(), city) != ts.end()) continue;
+            // could insert row here
+            if (tour.Prev(city) == ts.cities().back() || tour.Next(city) == ts.cities().back()) continue;
+            if (ts.ordered().count(city) == 1) continue;
 
-            double gain_2 = gain + Distance(ts.back(), city);
+            double gain_2 = gain + Distance(ts.cities().back(), city);
             if (gain_2 > 0) continue;
 
             if constexpr (kVerbose) {
@@ -256,7 +330,7 @@ private:
 
             for (auto i : {0, 1}) {
                 //  this is wrong. has to consider whole edges
-                if (find(ts.begin(), ts.end(), ends[i]) != ts.end()) continue;
+                if (ts.ordered().count(ends[i]) == 1) continue;
 
                 // auto new_x = make_pair(city, ends[i]);
 
@@ -264,11 +338,18 @@ private:
                     Println(cout, "consider broken: ", city, " ", ends[i]);
                 }
 
-                ts.push_back(city);
-                ts.push_back(ends[i]);
+                ts.Push(city);
+                ts.Push(ends[i]);
+
+                Println(cout, "order: ", tour.Order());
+                Println(cout, "ordered ", std::vector<City>{ts.ordered().begin(), ts.ordered().end()});
+                Println(cout, "set: ", ts.cities());
+                Println(cout, "old: ", CanClose(ts.cities()), " new: ", CanClose(ts));
+                assert(CanClose(ts.cities()) == CanClose(ts));
+
                 if (!CanClose(ts)) {
-                    ts.pop_back();
-                    ts.pop_back();
+                    ts.Pop();
+                    ts.Pop();
 
                     if constexpr (kVerbose) {
                         Println(cout, "can't close");
@@ -278,7 +359,7 @@ private:
                 }
 
                 double newGain = gain_2 - Distance(city, ends[i]);
-                double closeGain = newGain + Distance(ends[i], ts[0]);
+                double closeGain = newGain + Distance(ends[i], ts.cities()[0]);
 
                 if constexpr (kVerbose) {
                     Println(cout, "can close, close gain: ", closeGain, " , continue: ", newGain);
@@ -292,8 +373,8 @@ private:
                     return true;
                 }
 
-                ts.pop_back();
-                ts.pop_back();
+                ts.Pop();
+                ts.Pop();
             }
         }
 
