@@ -74,6 +74,16 @@ class LinKernighanBase {
         }
     };
 
+    struct PopGuard {
+        OptSet& s;
+        bool skip_ = false;
+
+        PopGuard(OptSet& s) : s(s) {}
+        ~PopGuard() { if (!skip_) s.Pop(); }
+
+        void skip() { skip_ = true; }
+    };
+
 public:
     LinKernighanBase(Tour& tour, const vector<Point>& ps, const grid::Grid<Index>& nearestNeighbours, double epsilon)
         : tour(tour), ps(ps), nearestNeighbours(nearestNeighbours), epsilon(epsilon) {}
@@ -95,6 +105,23 @@ public:
         return close_count_;
     }
 
+    bool ValidAdd(const OptSet& ts)
+    {
+        if (ts.cities().size() <= 3) return true;
+
+        auto& cs = ts.cities();
+
+        auto last = cs.back();
+        auto first = cs[cs.size()-2];
+
+        Println(cout, first, " ", last, " ", ts.LinePrev(last), " ", ts.LineNext(last));
+        if (ts.LinePrev(last) == first || ts.LineNext(last) == first) {
+            return false;
+        }
+
+        return true;
+    }
+
     bool CanClose(const OptSet& ts) {
 
         auto& cs = ts.cities();
@@ -109,29 +136,57 @@ public:
 
         if (ts.cities().size() == 4) return true;
 
-        City anotherLast;
-        {
-            auto c_1 = ts.LinePrev(last);
-            auto c_2 = ts.LineNext(last);
-            anotherLast = (c_1 == cs[cs.size()-2] ? c_2 : c_1);
-        }
-        City anotherFirst;
-        {
-            auto c_1 = ts.LinePrev(first);
-            auto c_2 = ts.LineNext(first);
-            anotherFirst = (c_1 == cs[1] ? c_2 : c_1);
-        }
 
-        // keep indices around
-        auto anotherFirstIndex = 0;
-        while (cs[anotherFirstIndex] != anotherFirst) ++anotherFirstIndex;
-
-        if (cs[added_endpoint(anotherFirstIndex, cs.size())] == anotherLast)
         {
-            Println(cout, "lol ", anotherLast, " ", anotherFirst,
-                " next: ", cs[(anotherFirstIndex + 1) % cs.size()],
-                " prev: ", cs[(anotherFirstIndex + cs.size() - 1) % cs.size()]);
-            return false;
+            // pre broken edge
+            auto c_1 = cs[cs.size()-2];
+            auto c_2 = cs[cs.size()-3];
+            // c_1, c_2 - added edge
+            // c_1, last - last broken edge
+
+            // find
+            auto a_1 = ts.LineNext(c_1);
+            auto a_2 = ts.LinePrev(c_1);
+
+            auto another_c_1 = a_1 == last ? a_2 : a_1;
+
+            auto b_1 = ts.LineNext(c_2);
+            auto b_2 = ts.LinePrev(c_2);
+
+            auto another_c_2 = b_1 == cs[cs.size()-4] ? b_2 : b_1;
+
+            auto another_c_1_index = 0;
+            while (cs[another_c_1_index] != another_c_1) ++another_c_1_index;
+
+            if (cs[added_endpoint(another_c_1_index, cs.size())] == another_c_2) {
+                Println(cout, "lol2 ", c_1, " ", c_2, " ", cs[added_endpoint(another_c_1_index, cs.size())], " ", another_c_2);
+                return false;
+            }
+        }
+        {
+            City anotherLast;
+            {
+                auto c_1 = ts.LinePrev(last);
+                auto c_2 = ts.LineNext(last);
+                anotherLast = (c_1 == cs[cs.size() - 2] ? c_2 : c_1);
+            }
+            City anotherFirst;
+            {
+                auto c_1 = ts.LinePrev(first);
+                auto c_2 = ts.LineNext(first);
+                anotherFirst = (c_1 == cs[1] ? c_2 : c_1);
+            }
+
+            // keep indices around
+            auto anotherFirstIndex = 0;
+            while (cs[anotherFirstIndex] != anotherFirst) ++anotherFirstIndex;
+
+            if (cs[added_endpoint(anotherFirstIndex, cs.size())] == anotherLast) {
+                Println(cout, "lol ", anotherLast, " ", anotherFirst,
+                        " next: ", cs[(anotherFirstIndex + 1) % cs.size()],
+                        " prev: ", cs[(anotherFirstIndex + cs.size() - 1) % cs.size()]);
+                return false;
+            }
         }
 
         return true;
@@ -326,8 +381,11 @@ private:
                 Println(cout, "add edge: ", city , " gain: ", gain_2);
             }
 
-            array<Index, 2> ends = {{tour.Next(city), tour.Prev(city)}};
+            ts.Push(city);
+            PopGuard guard(ts);
+            if (!ValidAdd(ts)) continue;
 
+            array<Index, 2> ends = {{tour.Next(city), tour.Prev(city)}};
             for (auto i : {0, 1}) {
                 //  this is wrong. has to consider whole edges
                 if (ts.ordered().count(ends[i]) == 1) continue;
@@ -338,8 +396,8 @@ private:
                     Println(cout, "consider broken: ", city, " ", ends[i]);
                 }
 
-                ts.Push(city);
                 ts.Push(ends[i]);
+                PopGuard end_guard(ts);
 
                 Println(cout, "order: ", tour.Order());
                 Println(cout, "ordered ", std::vector<City>{ts.ordered().begin(), ts.ordered().end()});
@@ -348,8 +406,6 @@ private:
                 assert(CanClose(ts.cities()) == CanClose(ts));
 
                 if (!CanClose(ts)) {
-                    ts.Pop();
-                    ts.Pop();
 
                     if constexpr (kVerbose) {
                         Println(cout, "can't close");
@@ -366,15 +422,16 @@ private:
                 }
 
                 if (closeGain < 0) {
+                    guard.skip();
+                    end_guard.skip();
                     return true;
                 }
 
                 if (TryImprove<kVerbose>(ts, newGain)) {
+                    guard.skip();
+                    end_guard.skip();
                     return true;
                 }
-
-                ts.Pop();
-                ts.Pop();
             }
         }
 
