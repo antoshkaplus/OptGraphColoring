@@ -17,72 +17,22 @@ class LinKernighanBase {
     int64_t iter_count_ = 0;
     std::vector<Count> close_count_;
 
-    class OptSet {
-
-        using Set = std::set<Index, std::function<bool(Index, Index)>>;
-
-        std::vector<Index> cities_;
-        Set ordered_{[](Index, Index) {return true;}};
-    public:
-
-        OptSet(Tour& tour) {
-            ordered_ = Set([&](City c_1, City c_2) {
-                return tour.LineOrdered(c_1, c_2);
-            });
-        }
-
-        void Push(City city) {
-            cities_.push_back(city);
-            ordered_.insert(city);
-        }
-
-        void Pop() {
-            ordered_.erase(cities_.back());
-            cities_.pop_back();
-        }
-
-        const vector<City>& cities() const {
-            return cities_;
-        }
-
-        const Set& ordered() const {
-            return ordered_;
-        }
-
-        void ToOne() {
-            cities_[0] = cities_[1];
-            cities_.resize(1);
-
-            ordered_.clear();
-            ordered_.insert(cities_.back());
-        }
-
-        City LinePrev(City c_1) const {
-            auto it = ordered_.find(c_1);
-            if (it == ordered_.begin()) {
-                it = ordered_.end();
-            }
-            return *std::prev(it);
-        }
-
-        City LineNext(City c_1) const {
-            auto it = std::next(ordered_.find(c_1));
-            if (it == ordered_.end()) {
-                return *ordered_.begin();
-            }
-            return *it;
-        }
-    };
-
     struct PopGuard {
-        OptSet& s;
+        std::vector<City>& s;
         bool skip_ = false;
 
-        PopGuard(OptSet& s) : s(s) {}
-        ~PopGuard() { if (!skip_) s.Pop(); }
+        PopGuard(std::vector<City>& s) : s(s) {}
+        ~PopGuard() { if (!skip_) s.pop_back(); }
 
         void skip() { skip_ = true; }
     };
+
+    std::default_random_engine rng;
+
+    std::vector<City> ts;
+    vector<Index> ts_line_order;
+    vector<Index> ts_left;
+    vector<bool> ts_visited;
 
 public:
     LinKernighanBase(Tour& tour, const vector<Point>& ps, const grid::Grid<Index>& nearestNeighbours, double epsilon)
@@ -105,96 +55,6 @@ public:
         return close_count_;
     }
 
-    bool ValidAdd(const OptSet& ts)
-    {
-        if (ts.cities().size() <= 3) return true;
-
-        auto& cs = ts.cities();
-
-        auto last = cs.back();
-        auto first = cs[cs.size()-2];
-
-        Println(cout, first, " ", last, " ", ts.LinePrev(last), " ", ts.LineNext(last));
-        if (ts.LinePrev(last) == first || ts.LineNext(last) == first) {
-            return false;
-        }
-
-        return true;
-    }
-
-    bool CanClose(const OptSet& ts) {
-
-        auto& cs = ts.cities();
-
-        auto last = cs.back();
-        auto first = cs.front();
-
-        Println(cout, first, " ", last, " ", ts.LinePrev(last), " ", ts.LineNext(last));
-        if (ts.LinePrev(last) == first || ts.LineNext(last) == first) {
-            return false;
-        }
-
-        if (ts.cities().size() == 4) return true;
-
-
-        {
-            // pre broken edge
-            auto c_1 = cs[cs.size()-2];
-            auto c_2 = cs[cs.size()-3];
-            // c_1, c_2 - added edge
-            // c_1, last - last broken edge
-
-            // find
-            auto a_1 = ts.LineNext(c_1);
-            auto a_2 = ts.LinePrev(c_1);
-
-            auto another_c_1 = a_1 == last ? a_2 : a_1;
-
-            auto b_1 = ts.LineNext(c_2);
-            auto b_2 = ts.LinePrev(c_2);
-
-            auto another_c_2 = b_1 == cs[cs.size()-4] ? b_2 : b_1;
-
-            auto another_c_1_index = 0;
-            while (cs[another_c_1_index] != another_c_1) ++another_c_1_index;
-
-            if (cs[added_endpoint(another_c_1_index, cs.size())] == another_c_2) {
-                Println(cout, "lol2 ", c_1, " ", c_2, " ", cs[added_endpoint(another_c_1_index, cs.size())], " ", another_c_2);
-                return false;
-            }
-        }
-        {
-            City anotherLast;
-            {
-                auto c_1 = ts.LinePrev(last);
-                auto c_2 = ts.LineNext(last);
-                anotherLast = (c_1 == cs[cs.size() - 2] ? c_2 : c_1);
-            }
-            City anotherFirst;
-            {
-                auto c_1 = ts.LinePrev(first);
-                auto c_2 = ts.LineNext(first);
-                anotherFirst = (c_1 == cs[1] ? c_2 : c_1);
-            }
-
-            // keep indices around
-            auto anotherFirstIndex = 0;
-            while (cs[anotherFirstIndex] != anotherFirst) ++anotherFirstIndex;
-
-            if (cs[added_endpoint(anotherFirstIndex, cs.size())] == anotherLast) {
-                Println(cout, "lol ", anotherLast, " ", anotherFirst,
-                        " next: ", cs[(anotherFirstIndex + 1) % cs.size()],
-                        " prev: ", cs[(anotherFirstIndex + cs.size() - 1) % cs.size()]);
-                return false;
-            }
-        }
-
-        return true;
-
-    }
-
-
-
     // bottleneck is here unable to get to large K because of it.
     // if only could do it faster than n*log (n) or something
     template <bool kVerbose = false>
@@ -205,7 +65,7 @@ public:
             Println(cout, "ts: ", ts);
         }
 
-        vector<Index> ts_line_order(ts.size());
+        ts_line_order.resize(ts.size());
         iota(ts_line_order.begin(), ts_line_order.end(), 0);
 
         sort(ts_line_order.begin(), ts_line_order.end(), [&](auto i_1, auto i_2) {
@@ -219,7 +79,7 @@ public:
         // endpoints of paths left
 
         // for each t_index provided gives back t_index_ of the path that's still there
-        vector<Index> ts_left(ts.size());
+        ts_left.resize(ts.size());
         auto i = 0;
         if (broken_endpoint(ts_line_order[0], ts.size()) == ts_line_order[1]) {
             i = 1;
@@ -236,7 +96,8 @@ public:
             Println(cout, ts_left);
         }
 
-        vector<bool> ts_visited(ts.size(), false);
+        ts_visited.resize(ts.size());
+        std::fill(ts_visited.begin(), ts_visited.end(), false);
 
         // checking if we get back to endpoint before
         // passing through all of them
@@ -273,7 +134,6 @@ public:
     void Solve() {
 
         std::uniform_int_distribution<> distr(0, ps.size() - 1);
-        std::default_random_engine rng;
 
         auto start_timestamp = std::chrono::system_clock::now();
 
@@ -281,20 +141,22 @@ public:
         while (again && std::chrono::system_clock::now() - start_timestamp < time_limit) {
             again = false;
 
-            OptSet ts(tour);
-            ts.Push(distr(rng));
+            ts.clear();
+            ts.push_back(distr(rng));
+
+            bool next = distr(rng) % 2 == 0;
 
             for (auto i = 0; i < ps.size(); ++i) {
                 // should I try Prev too ?
-                ts.Push(tour.Next(ts.cities().back()));
+                ts.push_back(next ? tour.Next(ts.back()) : tour.Prev(ts.back()));
                 ++iter_count_;
 
                 double before = 0; (void)before;
                 if constexpr (kVerbose) before = TSP_Distance(ps, tour.Order());
 
                 if (TryImprove<kVerbose>(ts)) {
-                    CheckGain<kVerbose>(ts.cities());
-                    Close<kVerbose>(ts.cities());
+                    CheckGain<kVerbose>(ts);
+                    Close<kVerbose>(ts);
 
                     if constexpr (kVerbose) {
                         Println(cout, "new tour:");
@@ -310,7 +172,8 @@ public:
                     break;
                 }
 
-                ts.ToOne();
+                ts[0] = ts[1];
+                ts.resize(1);
             }
 
             // bring back prev guy
@@ -322,13 +185,13 @@ public:
     }
 
     template <bool kVerbose>
-    bool TryImprove(OptSet& ts) {
-        assert(ts.cities().size() == 2);
+    bool TryImprove(std::vector<City>& ts) {
+        assert(ts.size() == 2);
 
         // how big by absolute value negative value is
-        double gain = -Distance(ts.cities()[0], ts.cities()[1]);
+        double gain = -Distance(ts[0], ts[1]);
         if constexpr (kVerbose) {
-            Println(cout, ts.cities()[0], " ", ts.cities()[1], " gain: ", gain);
+            Println(cout, ts[0], " ", ts[1], " gain: ", gain);
         }
 
         return TryImprove<kVerbose>(ts, gain);
@@ -353,42 +216,43 @@ private:
     }
 
     template <bool kVerbose>
-    bool TryImprove(OptSet& ts, double gain) {
+    bool TryImprove(std::vector<City>& ts, double gain) {
         if constexpr (kVerbose) {
             Println(cout, "try improve: ", " gain: ", gain);
-            Println(cout, ts.cities());
+            Println(cout, ts);
         }
 
         // this shit is actually should be recursive probably
-        auto row = ts.cities().back();
+        auto row = ts.back();
 
         auto try_count = nearestNeighbours.col_count();
         // the bigger the number the better the result
-        if (ts.cities().size() >= 60) try_count = 1;
+        if (ts.size() >= 40) try_count = 1;
 
         for (auto col = 0; col < try_count; ++col) {
             // city will be added
             auto city = nearestNeighbours(row, col);
 
             // could insert row here
-            if (tour.Prev(city) == ts.cities().back() || tour.Next(city) == ts.cities().back()) continue;
-            if (ts.ordered().count(city) == 1) continue;
+            if (tour.Prev(city) == ts.back() || tour.Next(city) == ts.back()) continue;
+            if (std::find(ts.begin(), ts.end(), city) != ts.end()) continue;
 
-            double gain_2 = gain + Distance(ts.cities().back(), city);
+            double gain_2 = gain + Distance(ts.back(), city);
             if (gain_2 > 0) continue;
 
             if constexpr (kVerbose) {
                 Println(cout, "add edge: ", city , " gain: ", gain_2);
             }
 
-            ts.Push(city);
+            ts.push_back(city);
             PopGuard guard(ts);
-            if (!ValidAdd(ts)) continue;
 
             array<Index, 2> ends = {{tour.Next(city), tour.Prev(city)}};
+            if (std::uniform_real_distribution()(rng) > 0.5) std::swap(ends[0], ends[1]);
+
             for (auto i : {0, 1}) {
                 //  this is wrong. has to consider whole edges
-                if (ts.ordered().count(ends[i]) == 1) continue;
+                if (std::find(ts.begin(), ts.end(), ends[i]) != ts.end()) continue;
 
                 // auto new_x = make_pair(city, ends[i]);
 
@@ -396,14 +260,8 @@ private:
                     Println(cout, "consider broken: ", city, " ", ends[i]);
                 }
 
-                ts.Push(ends[i]);
+                ts.push_back(ends[i]);
                 PopGuard end_guard(ts);
-
-                Println(cout, "order: ", tour.Order());
-                Println(cout, "ordered ", std::vector<City>{ts.ordered().begin(), ts.ordered().end()});
-                Println(cout, "set: ", ts.cities());
-                Println(cout, "old: ", CanClose(ts.cities()), " new: ", CanClose(ts));
-                assert(CanClose(ts.cities()) == CanClose(ts));
 
                 if (!CanClose(ts)) {
 
@@ -415,7 +273,7 @@ private:
                 }
 
                 double newGain = gain_2 - Distance(city, ends[i]);
-                double closeGain = newGain + Distance(ends[i], ts.cities()[0]);
+                double closeGain = newGain + Distance(ends[i], ts[0]);
 
                 if constexpr (kVerbose) {
                     Println(cout, "can close, close gain: ", closeGain, " , continue: ", newGain);
