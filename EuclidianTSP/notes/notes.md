@@ -11,6 +11,10 @@ it's faster to compute it on the fly other than address slower memory
 
 ### TODO
 
+LK algorithm should be reconsidered with implemenations of more ideas from Lin Kernighan
+initial paper + research alpha-nearness + 1-trees in getting lower bound
+
+
 Failed By Time. Need timer stop:
 ant_colony
 

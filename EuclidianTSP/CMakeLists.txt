@@ -44,7 +44,7 @@ add_executable(tsp_sa_analysis app/sa_analysis.cpp)
 target_link_libraries(tsp_sa_analysis ant tbb)
 
 add_executable(lk_analysis app/lk_analysis.cpp)
-target_link_libraries(lk_analysis ant)
+target_link_libraries(lk_analysis ant tbb)
 
 # methods
 

@@ -9,7 +9,7 @@
 #include "tsp_ant_colony.hpp"
 #include "sa/sa.hpp"
 #include "tour/tsp_vector_tour.hpp"
-#include "tsp_lin_kernighan_base.hpp"
+#include "lk/lk_base.hpp"
 
 
 int main(int argc, const char * argv[]) {

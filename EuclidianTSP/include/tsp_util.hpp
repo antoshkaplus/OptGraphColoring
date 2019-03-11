@@ -14,6 +14,8 @@ using namespace ant::geometry::d2::f;
 using Problem = vector<Point>;
 using Solution = vector<Index>;
 
+using City = Index;
+
 inline Problem ReadProblem(istream& in) {
     Count point_count = 0;
     in >> point_count;
