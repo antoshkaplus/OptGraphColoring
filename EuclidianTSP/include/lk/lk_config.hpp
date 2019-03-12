@@ -57,14 +57,17 @@ public:
             auto max_perm_depth = c.get_child("max_perm_depth") | extract_values;
             auto neighbour_count = c.get_child("neighbour_count") | extract_values;
 
-            auto problem = c.get_child("problem") |
-                           ranges::view::transform([](auto& t) { return t.second.template get_value<std::string>(); });
+            auto extract_strings = ranges::view::transform([](auto& t) { return t.second.template get_value<std::string>(); });
 
-            auto make_task = [&](Count max_perm_depth, Count neighbour_count, const std::string& problem) {
-                return LK_Task{LK_Config{epsilon, time_limit, max_perm_depth, neighbour_count}, problem};
+            auto perm = c.get_child("perm") | extract_strings;
+            auto problem = c.get_child("problem") | extract_strings;
+
+
+            auto make_task = [&](Count max_perm_depth, Count neighbour_count, std::string perm, const std::string& problem) {
+                return LK_Task{LK_Config{epsilon, time_limit, max_perm_depth, neighbour_count, perm}, problem};
             };
 
-            ranges::push_back(tasks, ranges::view::cartesian_product(max_perm_depth, neighbour_count, problem) |
+            ranges::push_back(tasks, ranges::view::cartesian_product(max_perm_depth, neighbour_count, perm, problem) |
                                      ranges::view::transform([&](const auto& tuple) { return std::apply(make_task, tuple); }));
         }
 

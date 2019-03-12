@@ -1,3 +1,3 @@
 
 config/*
-!config/sample_orig.json
+!config/sample_*.json

@@ -1,0 +1,15 @@
+{
+    "problem_dir": "./data",
+    "result_dir": "./temp",
+    "tasks":
+    [
+        {
+            "epsilon": 1e-3,
+            "time_limit": "8h",
+            "max_perm_depth": [60],
+            "neighbour_count": [5],
+            "perm": ["P", "P_V1"],
+            "problem": ["tsp_575_1", "tsp_783_1", "tsp_1173_1"]
+        }
+    ]
+}

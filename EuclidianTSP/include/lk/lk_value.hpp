@@ -21,7 +21,7 @@ struct LK_Value final : LK_Interface {
         } else if (config.perm == "P_V1") {
             Init<LK_Permutation_V1<TwoLevelTreeTour>>(config, ps);
         } else {
-            throw std::runtime_error("cooling not supported: " + config.perm);
+            throw std::runtime_error("permutation not supported: " + config.perm);
         }
     }
 
