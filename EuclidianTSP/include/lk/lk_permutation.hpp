@@ -103,8 +103,8 @@ public:
         Index order_index_1;
         Index order_index_2;
         if (comp(index_1, items_line_order.front()) && comp(items_line_order.back(), index_2)) {
-            order_index_1 = items_line_order.insert(items_line_order.begin(), index_1) - items_line_order.begin();
-            order_index_2 = items_line_order.insert(items_line_order.end(), index_2) - items_line_order.begin();
+            order_index_1 = (items_line_order.insert(items_line_order.begin(), index_1)) - items_line_order.begin();
+            order_index_2 = (items_line_order.insert(items_line_order.end(), index_2)) - items_line_order.begin();
             // swap placement is important
             std::swap(index_1, index_2);
             std::swap(order_index_1, order_index_2);

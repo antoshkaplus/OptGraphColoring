@@ -188,7 +188,7 @@ private:
             }
 
             array<Index, 2> ends = {{tour.Next(city), tour.Prev(city)}};
-            if (std::uniform_real_distribution()(rng) > 0.5) std::swap(ends[0], ends[1]);
+            if (std::uniform_real_distribution<>()(rng) > 0.5) std::swap(ends[0], ends[1]);
 
             for (auto i : {0, 1}) {
                 //  this is wrong. has to consider whole edges
