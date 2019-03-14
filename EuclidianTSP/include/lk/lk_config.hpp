@@ -17,7 +17,9 @@ struct LK_Config {
 
 std::ostream& operator<<(std::ostream& out, const LK_Config& config) {
     Println(out, "time_limit: ", FormatDuration(config.time_limit),
-            " max_perm_depth: ", config.max_perm_depth);
+            " max_perm_depth: ", config.max_perm_depth,
+            " neighbour_count: ", config.neighbour_count,
+            " perm: ", config.perm);
     return out;
 }
 

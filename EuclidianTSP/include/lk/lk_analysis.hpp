@@ -42,6 +42,7 @@ void Run_LK_Task(std::string_view task_id, report::Logger& logger, const LK_Task
     Println(out, "iterations: ", solver.iter_count());
     Println(out, "permutations: ", solver.close_count());
     Println(out, "time: ", FormatDuration(solver.time_spent()));
+    Println(out, "result: ", distance);
     logger.Log(task_id, " reported");
 }
 
