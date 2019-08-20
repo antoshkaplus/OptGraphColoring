@@ -16,6 +16,7 @@ void Run_LK_Task(std::string_view task_id, report::Logger& logger, const LK_Task
     std::experimental::filesystem::path p{problem_dir};
     p /= task.problem_name;
     std::ifstream in(p);
+    if (in.fail()) throw std::runtime_error("error open file " + p.string());
 
     auto problem = ReadProblem(in);
 
@@ -76,7 +77,7 @@ void LK_Analyze(const std::string& config_path) {
         try {
             Run_LK_Task(task_id_str, logger, task, problem_dir, analysis_path.string());
         } catch (std::exception& ex) {
-            logger.Log(task_id_str, " failed");
+            logger.Log(task_id_str, " failed ", ex.what());
         }
     });
 }
