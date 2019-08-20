@@ -21,3 +21,5 @@ ant_colony
 Need error check. Look at memory consumption.
 shortest_edge
 simplex_ins
+
+Consider methods described in https://www2.seas.gwu.edu/~simhaweb/champalg/tsp/tsp.html
